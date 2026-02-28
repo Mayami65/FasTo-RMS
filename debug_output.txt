@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "customer_id": 1,
+    "sale_id": 7,
+    "total_amount": 350,
+    "balance_due": 200,
+    "status": "ACTIVE",
+    "created_at": "2026-02-11 19:03:38",
+    "next_payment_date": "2026-03-13 19:03:38",
+    "name": "John Doe"
+  }
+]
