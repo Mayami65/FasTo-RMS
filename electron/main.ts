@@ -63,7 +63,7 @@ app.on('ready', () => {
         ipcMain.handle('get-app-info', () => {
             return {
                 version: app.getVersion(),
-                dbPath: app.getPath('userData') + '\\fasto.db'
+                dbPath: path.join(app.getPath('userData'), 'db', 'main.sqlite')
             };
         });
 
