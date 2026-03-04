@@ -51,22 +51,8 @@ export function Sidebar() {
                 isCollapsed ? "w-16" : "w-64"
             )}
         >
-            {/* Logo area */}
-            <div className="flex items-center h-16 px-4 border-b border-slate-100">
-                <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-md">
-                        <span className="text-primary-foreground font-bold text-sm">FT</span>
-                    </div>
-                    {!isCollapsed && (
-                        <h1 className="text-base font-bold text-slate-900 tracking-tight truncate">
-                            FasTo RMS
-                        </h1>
-                    )}
-                </div>
-            </div>
-
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 custom-scrollbar">
+            <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-6 pb-4 px-3 space-y-1 custom-scrollbar">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.path ||
@@ -95,32 +81,41 @@ export function Sidebar() {
             </nav>
 
             {/* User Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-                <div className={cn("flex flex-col gap-3", isCollapsed ? "items-center" : "")}>
+            <div className="p-4 border-t border-slate-100 mt-auto bg-slate-50/30">
+                <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center" : "")}>
+                    {/* Initials Avatar */}
+                    <div className={cn(
+                        "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-transform hover:scale-105",
+                        isOwner
+                            ? "bg-slate-900 text-white"
+                            : "bg-primary/10 text-primary border border-primary/20"
+                    )}>
+                        {user?.username?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+
                     {!isCollapsed && (
-                        <div className="flex flex-col">
-                            <p className="text-sm font-semibold text-slate-900 truncate">{user?.username}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <Badge variant="secondary" className="px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider bg-slate-200 text-slate-700">
-                                    {user?.role === 'OWNER' ? 'Admin' : 'Rep'}
-                                </Badge>
-                                <span className="flex h-2 w-2 rounded-full bg-green-500" title="System Online" />
-                            </div>
+                        <div className="flex-1 min-w-0 pr-1">
+                            <p className="text-sm font-bold text-slate-900 truncate tracking-tight">{user?.username}</p>
+                            <Badge variant="secondary" className="px-1.5 py-0 h-4 text-[9px] uppercase font-black tracking-widest bg-slate-200 text-slate-600 border-none">
+                                {user?.role === 'OWNER' ? 'Admin' : 'Rep'}
+                            </Badge>
                         </div>
                     )}
-                    <Button
-                        variant="ghost"
-                        size={isCollapsed ? "icon" : "sm"}
-                        onClick={logout}
-                        className={cn(
-                            "w-full flex items-center justify-start gap-3 text-slate-600 hover:text-red-600 hover:bg-red-50 py-2",
-                            isCollapsed ? "justify-center p-0" : ""
-                        )}
-                    >
-                        <LogOut className="w-5 h-5 flex-shrink-0" />
-                        {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
-                    </Button>
                 </div>
+
+                <Button
+                    variant="ghost"
+                    size={isCollapsed ? "icon" : "sm"}
+                    onClick={logout}
+                    className={cn(
+                        "w-full mt-3 flex items-center gap-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50/50 transition-colors rounded-lg",
+                        isCollapsed ? "justify-center h-9 w-9 mx-auto" : "px-2 py-1.5 justify-start"
+                    )}
+                    title={isCollapsed ? "Logout" : ""}
+                >
+                    <LogOut className="w-4 h-4 flex-shrink-0 opacity-70" />
+                    {!isCollapsed && <span className="text-xs font-bold uppercase tracking-wider">Logout</span>}
+                </Button>
             </div>
 
             {/* Toggle Button */}

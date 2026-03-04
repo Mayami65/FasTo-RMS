@@ -159,4 +159,91 @@ body {
   .table-shell tbody tr:hover td {
     @apply bg-slate-50/80;
   }
+
+  /* Onboarding Specific Animations */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Ghanaian Vibe Accents */
+  .bg-kente-pattern {
+    background-image: linear-gradient(45deg, rgba(255, 215, 0, 0.05) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(255, 215, 0, 0.05) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(0, 155, 119, 0.05) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(0, 155, 119, 0.05) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+
+  .border-ghana-gold {
+    border-color: #FFD700;
+  }
+
+  .bg-ghana-gold {
+    background-color: #FFD700;
+  }
+
+  .text-ghana-gold {
+    color: #FFD700;
+  }
+
+  .text-ghana-green {
+    color: #009B77;
+  }
+
+  .bg-ghana-green {
+    background-color: #009B77;
+  }
+
+  .text-ghana-red {
+    color: #EF3340;
+  }
+
+  .bg-ghana-red {
+    background-color: #EF3340;
+  }
 }

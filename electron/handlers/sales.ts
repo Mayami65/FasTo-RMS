@@ -322,7 +322,7 @@ export function registerSalesHandlers(ipcMain: IpcMain, db: AppDatabase) {
 
             audit(db, {
                 userId: data.userId,
-                action: 'REFUND_ process',
+                action: 'REFUND_PROCESS',
                 details: `Processed refund of GH₵ ${result.totalRefundAmount} for Sale #${data.saleId}`,
                 entity: 'refund',
                 entityId: result.refundId

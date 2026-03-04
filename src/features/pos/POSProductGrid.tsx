@@ -37,7 +37,7 @@ export function POSProductGrid({ products, categories, onAddToCart }: POSProduct
                     const fullPath = await window.api.getProductImagePath(p.image_path);
                     if (fullPath) {
                         const normalizedPath = fullPath.replace(/\\/g, '/');
-                        newPaths[p.image_path] = `media:///${normalizedPath}`;
+                        newPaths[p.image_path] = `media://${normalizedPath}`;
                     }
                 }
             }
@@ -125,7 +125,7 @@ export function POSProductGrid({ products, categories, onAddToCart }: POSProduct
 
             {/* Product Grid Area */}
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 pb-4">
                     {filteredProducts.map(product => {
                         const isOutOfStock = product.stock_quantity === 0;
                         const isLowStock = !isOutOfStock && product.stock_quantity <= product.reorder_level;
@@ -134,7 +134,7 @@ export function POSProductGrid({ products, categories, onAddToCart }: POSProduct
                             <Card
                                 key={product.id}
                                 className={cn(
-                                    "cursor-pointer transition-all duration-300 flex flex-col group relative overflow-hidden border border-slate-200 shadow-sm bg-white rounded-xl",
+                                    "cursor-pointer transition-all duration-300 flex flex-col group relative overflow-hidden border border-slate-200 shadow-sm bg-white rounded-xl min-h-[280px]",
                                     isOutOfStock
                                         ? "opacity-60 cursor-not-allowed"
                                         : "hover:shadow-md hover:-translate-y-1 hover:border-primary/30"

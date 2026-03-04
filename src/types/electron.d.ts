@@ -13,6 +13,7 @@ export interface IElectronAPI {
     addProduct: (product: Product) => Promise<{ success: boolean; id?: number; error?: string }>;
     updateProduct: (product: Product) => Promise<{ success: boolean; error?: string }>;
     deleteProduct: (id: number) => Promise<{ success: boolean; error?: string }>;
+    deleteAllProducts: () => Promise<{ success: boolean; error?: string }>;
 
     // Stock
     adjustStock: (data: { productId: number; quantityChange: number; reason: string; notes?: string }) => Promise<{ success: boolean; error?: string }>;

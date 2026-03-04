@@ -1,0 +1,68 @@
+/* FasTo RMS Brand Identity */
+:root {
+    --brand-emerald: #059669;
+    --brand-amber: #F59E0B;
+    --brand-slate: #0F172A;
+    --brand-primary: #1e1b4b;
+    /* indigo-950/900 */
+    --brand-primary-hover: #312e81;
+    /* indigo-800 */
+}
+
+.bg-brand-emerald {
+    background-color: var(--brand-emerald);
+}
+
+.text-brand-emerald {
+    color: var(--brand-emerald);
+}
+
+.border-brand-emerald {
+    border-color: var(--brand-emerald);
+}
+
+.bg-brand-amber {
+    background-color: var(--brand-amber);
+}
+
+.text-brand-amber {
+    color: var(--brand-amber);
+}
+
+.brand-gradient {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+}
+
+.brand-logo-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-logo-shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -200%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 4s infinite linear;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(150%);
+    }
+}
+
+.brand-monogram {
+    /* Deprecated in favor of official logo assets */
+}
+
+.brand-shadow {
+    box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.3);
+}

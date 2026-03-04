@@ -128,7 +128,7 @@ export function ProductForm({ open, onClose, onSubmit, initialData }: ProductFor
                 window.api.getProductImagePath(initialData.image_path).then(path => {
                     if (path) {
                         const normalizedPath = path.replace(/\\/g, '/');
-                        setImagePreview(`media:///${normalizedPath}`);
+                        setImagePreview(`media://${normalizedPath}`);
                     }
                 });
             } else {
@@ -199,7 +199,7 @@ export function ProductForm({ open, onClose, onSubmit, initialData }: ProductFor
             const fullPath = await window.api.getProductImagePath(fileName);
             if (fullPath) {
                 const normalizedPath = fullPath.replace(/\\/g, '/');
-                setImagePreview(`media:///${normalizedPath}`);
+                setImagePreview(`media://${normalizedPath}`);
             }
         }
     };

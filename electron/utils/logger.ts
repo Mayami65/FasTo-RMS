@@ -9,8 +9,17 @@ export class Logger {
     private logFile: string;
 
     constructor() {
-        const paths = getAppPaths();
-        this.logFile = path.join(paths.logs, 'app.log');
+        try {
+            const paths = getAppPaths();
+            this.logFile = path.join(paths.logs, 'app.log');
+            // Ensure directory exists immediately
+            if (!fs.existsSync(paths.logs)) {
+                fs.mkdirSync(paths.logs, { recursive: true });
+            }
+        } catch (e) {
+            console.error('Failed to initialize logger paths:', e);
+            this.logFile = path.join(process.cwd(), 'emergency.log');
+        }
     }
 
     private rotateLogs() {
@@ -33,12 +42,20 @@ export class Logger {
     }
 
     log(message: string, level: 'INFO' | 'WARN' | 'ERROR' = 'INFO') {
-        this.rotateLogs();
         const timestamp = new Date().toISOString();
         const formattedMessage = `[${timestamp}] [${level}] ${message}\n`;
 
-        console.log(formattedMessage.trim());
-        fs.appendFileSync(this.logFile, formattedMessage);
+        // Always log to console
+        if (level === 'ERROR') console.error(formattedMessage.trim());
+        else if (level === 'WARN') console.warn(formattedMessage.trim());
+        else console.log(formattedMessage.trim());
+
+        try {
+            this.rotateLogs();
+            fs.appendFileSync(this.logFile, formattedMessage);
+        } catch (e) {
+            console.error('Failed to write to log file:', e);
+        }
     }
 
     info(message: string) { this.log(message, 'INFO'); }

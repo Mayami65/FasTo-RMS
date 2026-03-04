@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Package, Search, ChevronDown, ChevronRight, Tags } from 'lucide-react';
+import { Pencil, Trash2, Package, Search, ChevronDown, ChevronRight, Tags, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, Fragment } from 'react';
 import { Category } from '@/types/product';
@@ -67,7 +67,10 @@ export function ProductList({
             for (const p of products) {
                 if (p.image_path) {
                     const fullPath = await window.api.getProductImagePath(p.image_path);
-                    if (fullPath) newPaths[p.image_path] = `media://${fullPath}`;
+                    if (fullPath) {
+                        const normalizedPath = fullPath.replace(/\\/g, '/');
+                        newPaths[p.image_path] = `media://${normalizedPath}`;
+                    }
                 }
             }
             setImagePaths(newPaths);
@@ -88,33 +91,59 @@ export function ProductList({
     }, []);
 
 
-    const handleExport = () => {
-        const headers = ["SKU", "Name", "Category", "Cost Price", "Selling Price", "Stock Quantity", "Reorder Level", "Description"];
-        const rows = products.map(p => [
-            p.sku,
-            p.name,
-            p.category_name || p.category || 'Uncategorized',
-            p.cost_price,
-            p.selling_price,
-            p.stock_quantity,
-            p.reorder_level,
-            p.description || ''
-        ]);
+    const [isExporting, setIsExporting] = useState(false);
 
-        const csvContent = [
-            headers.join(","),
-            ...rows.map(row => row.map(value => `"${value}"`).join(","))
-        ].join("\n");
+    const handleExport = async () => {
+        try {
+            setIsExporting(true);
+            // Fetch ALL products matching current filters (limit: 100000)
+            const response = await window.api.getProducts({
+                page: 1,
+                limit: 100000,
+                search,
+                categoryId,
+                stockStatus
+            });
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `inventory_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            const exportData = response.data || [];
+
+            if (exportData.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            const headers = ["SKU", "Name", "Category", "Cost Price", "Selling Price", "Stock Quantity", "Reorder Level", "Description"];
+            const rows = exportData.map(p => [
+                p.sku,
+                p.name,
+                p.category_name || p.category || 'Uncategorized',
+                p.cost_price,
+                p.selling_price,
+                p.stock_quantity,
+                p.reorder_level,
+                p.description || ''
+            ]);
+
+            const csvContent = [
+                headers.join(","),
+                ...rows.map(row => row.map(value => `"${value}"`).join(","))
+            ].join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `inventory_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Export failed", error);
+            alert("Failed to export inventory data.");
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const resetFilters = () => {
@@ -204,9 +233,11 @@ export function ProductList({
                         variant="outline"
                         size="sm"
                         onClick={handleExport}
+                        disabled={isExporting}
                         className="h-10 border-slate-200 text-slate-600 font-bold bg-white"
                     >
-                        <Download className="h-4 w-4 mr-2" /> Export
+                        {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                        {isExporting ? 'Exporting...' : 'Export'}
                     </Button>
                 </div>
             </div>

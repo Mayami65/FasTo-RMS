@@ -305,6 +305,40 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
         }
     });
 
+    // Delete All Products
+    ipcMain.handle('delete-all-products', async () => {
+        if (!db) return { success: false, error: 'Database not initialized' };
+        try {
+            const transaction = db.transaction(() => {
+                db.prepare('DELETE FROM products').run();
+                db.prepare('DELETE FROM product_variants').run();
+                db.prepare('DELETE FROM stock_movements').run();
+            });
+
+            transaction();
+
+            // Clear image directory
+            if (fs.existsSync(productImagesDir)) {
+                const files = fs.readdirSync(productImagesDir);
+                for (const file of files) {
+                    fs.unlinkSync(path.join(productImagesDir, file));
+                }
+            }
+
+            audit(db, {
+                action: 'PRODUCT_DELETE_ALL',
+                details: 'Deleted all products, variants, and stock movements from the system.',
+                entity: 'product',
+                entityId: 0
+            });
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Failed to delete all products:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
     // Stock Management
     ipcMain.handle('adjust-stock', async (_event, { productId, quantityChange, reason, notes }) => {
         if (!db) return { success: false, error: 'Database not initialized' };
@@ -366,17 +400,24 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
         if (!filePath) return { success: false, error: 'Operation cancelled' };
 
         try {
-            const XLSX = require('xlsx');
+            const ExcelJS = require('exceljs');
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Template');
+
             const headers = ['Name', 'SKU', 'Category', 'Price', 'Stock', 'Description', 'Image Path', 'Size', 'Color'];
-            const data: any[][] = [headers]; // Add headers as the first row
+            worksheet.addRow(headers);
+            worksheet.addRow(['Example Product', 'EX-001', 'General', 50, 100, 'Description here', '', 'M', 'Red']);
 
-            // Create a dummy row for example
-            data.push(['Example Product', 'EX-001', 'General', 50, 100, 'Description here', '', 'M', 'Red']);
+            // Formatting
+            const headerRow = worksheet.getRow(1);
+            headerRow.font = { bold: true };
+            headerRow.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFE0E0E0' }
+            };
 
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, 'Template');
-            XLSX.writeFile(wb, filePath);
+            await workbook.xlsx.writeFile(filePath);
 
             return { success: true, filePath };
         } catch (error: any) {
@@ -399,11 +440,53 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
     ipcMain.handle('import-products', async (_event, filePath) => {
         if (!db) return { success: false, error: 'Database not initialized' };
         try {
-            const XLSX = require('xlsx');
-            const workbook = XLSX.readFile(filePath);
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+            const ExcelJS = require('exceljs');
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(filePath);
+            const worksheet = workbook.getWorksheet(1);
+            if (!worksheet) return { success: false, error: 'Worksheet not found' };
+
+            const rows: any[] = [];
+            const headers: { [col: number]: string } = {};
+
+            // Get headers from first row and normalize them
+            const firstRow = worksheet.getRow(1);
+            firstRow.eachCell((cell: any, colNumber: number) => {
+                let header = cell.value?.toString() || '';
+                // Remove BOM and non-printable characters, then trim and lowercase
+                header = header.replace(/[^\x20-\x7E]/g, '').trim().toLowerCase();
+                if (header) {
+                    headers[colNumber] = header;
+                }
+            });
+
+            // Iterate over data rows
+            worksheet.eachRow({ includeEmpty: false }, (row: any, rowNumber: number) => {
+                if (rowNumber === 1) return; // Skip headers
+                const rowData: any = {};
+                let hasData = false;
+
+                row.eachCell({ includeEmpty: true }, (cell: any, colNumber: number) => {
+                    const header = headers[colNumber];
+                    if (header) {
+                        let value = cell.value;
+                        // Handle potential object values from exceljs (like formulas, rich text, or dates)
+                        if (value && typeof value === 'object') {
+                            if ('result' in value) value = (value as any).result;
+                            else if ('text' in value) value = (value as any).text;
+                            else if ('richText' in value) value = (value as any).richText.map((t: any) => t.text).join('');
+                        }
+
+                        // Treat null/undefined as empty string for string fields
+                        rowData[header] = value !== null && value !== undefined ? value : '';
+                        if (value !== null && value !== undefined && value !== '') hasData = true;
+                    }
+                });
+
+                if (hasData) {
+                    rows.push(rowData);
+                }
+            });
 
             if (rows.length === 0) return { success: false, error: 'File is empty' };
 
@@ -413,12 +496,30 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
             const errors: string[] = [];
             const productImagesDir = path.join(app.getPath('userData'), 'product_images');
 
+            // Find key column names (normalized)
+            const findCol = (row: any, ...aliases: string[]) => {
+                for (const alias of aliases) {
+                    const normalizedAlias = alias.toLowerCase().replace(/\s+/g, '');
+                    for (const key of Object.keys(row)) {
+                        if (key.replace(/\s+/g, '').toLowerCase() === normalizedAlias) {
+                            return row[key];
+                        }
+                    }
+                }
+                return null;
+            };
+
             const transaction = db.transaction(() => {
                 const productGroups: { [key: string]: any[] } = {};
-                for (const row of rows) {
-                    const name = row.name || row.Name || row.NAME;
-                    if (!name) continue;
-                    const normalizedName = name.trim();
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const name = findCol(row, 'name', 'product name', 'item name', 'product');
+                    if (!name) {
+                        skipped++;
+                        errors.push(`Row ${i + 2}: Missing "Name" column.`);
+                        continue;
+                    }
+                    const normalizedName = name.toString().trim();
                     if (!productGroups[normalizedName]) productGroups[normalizedName] = [];
                     productGroups[normalizedName].push(row);
                 }
@@ -433,23 +534,21 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                     VALUES (@product_id, @sku, @variation_name, @cost_price, @selling_price, @stock_quantity, @reorder_level)
                 `);
 
-                const checkSku = db!.prepare('SELECT id FROM product_variants WHERE sku = ?');
                 const checkCategory = db!.prepare('SELECT id FROM categories WHERE name = ? COLLATE NOCASE');
                 const insertCategory = db!.prepare('INSERT INTO categories (name, color) VALUES (?, ?)');
 
                 for (const [productName, groupRows] of Object.entries(productGroups)) {
                     try {
                         const firstRow = groupRows[0];
-                        const get = (r: any, k: string) => r[k] || r[k.toLowerCase()] || r[k.toUpperCase()] || '';
 
-                        const categoryName = get(firstRow, 'category').trim();
+                        const categoryName = (findCol(firstRow, 'category', 'item category') || 'Uncategorized').toString().trim();
                         let categoryId = null;
                         if (categoryName) {
                             const existingCat = checkCategory.get(categoryName) as any;
                             if (existingCat) {
                                 categoryId = existingCat.id;
                             } else {
-                                const colors = ['#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33A1', '#33FFF5'];
+                                const colors = ['#059669', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#EC4899'];
                                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
                                 const info = insertCategory.run(categoryName, randomColor);
                                 categoryId = info.lastInsertRowid;
@@ -457,7 +556,7 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                         }
 
                         let imagePath = null;
-                        const rawImagePath = get(firstRow, 'image path') || get(firstRow, 'image_path');
+                        const rawImagePath = findCol(firstRow, 'imagepath', 'image_path', 'image');
                         if (rawImagePath && typeof rawImagePath === 'string') {
                             const cleanPath = rawImagePath.replace(/"/g, '').trim();
                             if (cleanPath && fs.existsSync(cleanPath)) {
@@ -471,16 +570,20 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                             }
                         }
 
+                        const costPrice = parseFloat(findCol(firstRow, 'cost price', 'cost_price', 'cost') || 0);
+                        const sellingPrice = parseFloat(findCol(firstRow, 'selling price', 'selling_price', 'price', 'selling') || 0);
+                        const reorderLevel = parseInt(findCol(firstRow, 'reorder level', 'reorder_level', 'reorder') || 5);
+
                         const productInfo = insertProduct.run({
                             name: productName,
-                            sku: null,
+                            sku: findCol(firstRow, 'sku', 'product sku') || null,
                             category: categoryName,
                             category_id: categoryId,
-                            cost_price: 0,
-                            selling_price: parseFloat(get(firstRow, 'price')) || 0,
+                            cost_price: costPrice,
+                            selling_price: sellingPrice,
                             stock_quantity: 0,
-                            reorder_level: 5,
-                            description: get(firstRow, 'description'),
+                            reorder_level: reorderLevel,
+                            description: findCol(firstRow, 'description', 'desc', 'product description'),
                             image_path: imagePath
                         });
 
@@ -488,9 +591,9 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                         let totalProductStock = 0;
 
                         for (const row of groupRows) {
-                            const sizeRaw = get(row, 'size').toString();
-                            const color = get(row, 'color').toString();
-                            const totalRowStock = parseInt(get(row, 'stock')) || 0;
+                            const sizeRaw = (findCol(row, 'size', 'item size') || 'Default').toString();
+                            const color = (findCol(row, 'color', 'item color') || '').toString();
+                            const totalRowStock = parseInt(findCol(row, 'stock', 'stock quantity', 'quantity') || 0);
                             const sizes = sizeRaw ? (sizeRaw.includes(',') ? sizeRaw.split(',') : [sizeRaw]) : ['Default'];
 
                             const baseVariantStock = Math.floor(totalRowStock / sizes.length);
@@ -500,7 +603,7 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                                 const cleanSize = size.trim();
                                 if (!cleanSize) return;
                                 const variantName = color ? `${cleanSize} - ${color}` : cleanSize;
-                                const variantSku = `${productName.substring(0, 3).toUpperCase()}-${cleanSize}-${color ? color.substring(0, 3).toUpperCase() : 'DEF'}-${Math.floor(Math.random() * 10000)}`.replace(/\s+/g, '');
+                                const variantSku = `${productName.substring(0, 3).toUpperCase()}-${cleanSize.substring(0, 3).toUpperCase()}-${color ? color.substring(0, 3).toUpperCase() : 'DEF'}-${Math.floor(Math.random() * 10000)}`.replace(/\s+/g, '');
 
                                 let variantStock = baseVariantStock;
                                 if (index === 0) variantStock += remainder;
@@ -509,10 +612,10 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                                     product_id: productId,
                                     sku: variantSku,
                                     variation_name: variantName,
-                                    cost_price: 0,
-                                    selling_price: parseFloat(get(row, 'price')) || 0,
+                                    cost_price: parseFloat(findCol(row, 'cost price', 'cost_price', 'cost') || costPrice),
+                                    selling_price: parseFloat(findCol(row, 'selling price', 'selling_price', 'price') || sellingPrice),
                                     stock_quantity: variantStock,
-                                    reorder_level: 5
+                                    reorder_level: reorderLevel
                                 });
                                 totalProductStock += variantStock;
                             });

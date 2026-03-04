@@ -1,4 +1,3 @@
-import Database from 'better-sqlite3';
 import * as path from 'path';
 import { app } from 'electron';
 import * as isDev from 'electron-is-dev';
@@ -6,6 +5,47 @@ import * as bcrypt from 'bcryptjs';
 import { getAppPaths } from './utils/paths';
 import { logger } from './utils/logger';
 import * as fs from 'fs';
+
+// Native modules cannot be loaded from inside the ASAR archive.
+// In production, use process.resourcesPath which reliably points to the
+// resources/ folder so we can locate app.asar.unpacked regardless of install path.
+const Database: typeof import('better-sqlite3') = (() => {
+    try {
+        if (!app.isPackaged) {
+            logger.info('Database: Running in development mode.');
+            return require('better-sqlite3');
+        }
+
+        logger.info('Database: Packaged environment detected.');
+
+        // In some environments, __dirname might include app.asar, which better-sqlite3 can't load from.
+        // We look for the unpacked version.
+        const appPath = app.getAppPath();
+        const unpackedPath = appPath.includes('app.asar')
+            ? appPath.replace('app.asar', 'app.asar.unpacked')
+            : appPath;
+
+        // The structure inside app.asar/unpacked is usually electron/dist/main.js
+        // so we need to reach back to find node_modules
+        const modulePath = path.join(
+            unpackedPath,
+            'node_modules',
+            'better-sqlite3'
+        );
+
+        logger.info(`Database: Attempting to load native module from: ${modulePath}`);
+
+        if (fs.existsSync(modulePath)) {
+            return require(modulePath);
+        } else {
+            logger.warn(`Database: Module not found at ${modulePath}, falling back to standard require.`);
+            return require('better-sqlite3');
+        }
+    } catch (error: any) {
+        logger.error('Database: Critical failure loading better-sqlite3: ' + error.message);
+        throw error;
+    }
+})();
 
 let db: InstanceType<typeof Database> | null = null;
 export type AppDatabase = InstanceType<typeof Database>;
@@ -73,8 +113,8 @@ export function initDb() {
     }
 
     db = new Database(dbPath);
-    logger.info('Database connected at: ' + dbPath);
-    logger.info('Initializing database schema and migrations...');
+    logger.info('Database: Connected successfully at: ' + dbPath);
+    logger.info('Database: Initializing schema and migrations...');
 
     // Initialize Schema
     const schema = `

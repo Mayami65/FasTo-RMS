@@ -2,16 +2,18 @@
   "name": "fasto-rms",
   "private": true,
   "version": "1.0.0",
+  "description": "FasTo RMS - Dee's Joy Retail Management System",
+  "author": "FasTo Team",
   "main": "electron/dist/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "electron:build": "tsc -p electron/tsconfig.json && copy electron\\package.json electron\\dist\\package.json",
+    "electron:build": "tsc -p electron/tsconfig.json && node -e \"require('fs').cpSync('electron/package.json', 'electron/dist/package.json')\"",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "start": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"wait-on tcp:5173 && npm run electron:build && electron .\"",
-    "package": "npm run build && npm run electron:build && electron-builder"
+    "package": "npm run build && npm run electron:build && cd electron/dist && npm install --omit=dev && cd ../.. && electron-builder --win"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -28,9 +30,12 @@
     "@tanstack/react-query": "^5.90.21",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "electron-is-dev": "^3.0.1",
+    "exceljs": "^4.4.0",
     "lucide-react": "^0.563.0",
     "react": "^19.1.0",
     "react-day-picker": "^9.13.2",
@@ -40,7 +45,6 @@
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -53,14 +57,10 @@
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.19",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.6.2",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^40.3.0",
-    "electron-builder": "^26.7.0",
-    "electron-is-dev": "^3.0.1",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.17",
+    "electron": "^33.2.0",
+    "electron-builder": "^26.8.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "wait-on": "^9.0.3"

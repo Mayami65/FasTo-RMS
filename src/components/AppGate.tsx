@@ -57,5 +57,9 @@ export function AppGate({ children }: AppGateProps) {
         );
     }
 
-    return <>{children}</>;
+    return (
+        <div className="animate-in fade-in duration-700 h-full w-full">
+            {children}
+        </div>
+    );
 }

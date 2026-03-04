@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Database, Upload, Download, Moon, Sun, Monitor, ShieldCheck, Zap, Store, ReceiptText, Building2, Phone, Mail, FileText, Save, Users, TriangleAlert } from 'lucide-react';
+import { Database, Upload, Download, Moon, Sun, Monitor, ShieldCheck, Zap, Store, ReceiptText, Building2, Phone, Mail, FileText, Save, Users, TriangleAlert, Package, Loader2 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useAuth } from '@/context/AuthContext';
@@ -14,16 +14,20 @@ import { cn } from "@/lib/utils";
 
 import UserManagement from '@/components/settings/UserManagement';
 import ActivationModal from '@/components/settings/ActivationModal';
+import DeleteAllProductsModal from '@/components/settings/DeleteAllProductsModal';
 import { Lock, Unlock, AlertTriangle } from 'lucide-react';
 
 export default function Settings() {
     const [backUpLoading, setBackUpLoading] = useState(false);
     const [restoreLoading, setRestoreLoading] = useState(false);
+    const [isFullExporting, setIsFullExporting] = useState(false);
+    const [isDeletingAllProducts, setIsDeletingAllProducts] = useState(false);
     const { theme, setTheme } = useTheme();
     const { isOwner } = useAuth();
     const { settings, license, machineId, updateSetting, refreshSettings, hasFeature } = useSettings();
     const [activeTab, setActiveTab] = useState('general');
     const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const categories = [
         { id: 'general', label: 'General', icon: Monitor },
@@ -187,6 +191,73 @@ export default function Settings() {
             alert('An error occurred during restore');
         } finally {
             setRestoreLoading(false);
+        }
+    };
+
+    const handleFullInventoryExport = async () => {
+        try {
+            setIsFullExporting(true);
+            const response = await window.api.getProducts({ page: 1, limit: 1000000 });
+            const exportData = response.data || [];
+
+            if (exportData.length === 0) {
+                alert("No inventory data found.");
+                return;
+            }
+
+            const headers = ["ID", "SKU", "Name", "Category", "Cost Price", "Selling Price", "Stock Quantity", "Reorder Level", "Description"];
+            const rows = exportData.map(p => [
+                p.id || '',
+                p.sku || '',
+                p.name || '',
+                p.category_name || p.category || 'Uncategorized',
+                p.cost_price || 0,
+                p.selling_price || 0,
+                p.stock_quantity || 0,
+                p.reorder_level || 0,
+                p.description || ''
+            ]);
+
+            const csvContent = [
+                headers.join(","),
+                ...rows.map(row => row.map(value => `"${value}"`).join(","))
+            ].join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `full_inventory_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Full export failed", error);
+            alert("Failed to export full inventory.");
+        } finally {
+            setIsFullExporting(false);
+        }
+    };
+
+    const handleDeleteAllProducts = async () => {
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteAll = async () => {
+        setIsDeletingAllProducts(true);
+        try {
+            const result = await window.api.deleteAllProducts();
+            if (result.success) {
+                alert("All products have been deleted successfully.");
+            } else {
+                alert("Failed to delete products: " + result.error);
+            }
+        } catch (error) {
+            console.error("Bulk delete failed", error);
+            alert("An error occurred during bulk deletion.");
+        } finally {
+            setIsDeletingAllProducts(false);
         }
     };
 
@@ -692,6 +763,26 @@ export default function Settings() {
                                             <FileText className="h-6 w-6 text-amber-500" />
                                             Open Exports
                                         </Button>
+
+                                        <Button
+                                            onClick={handleFullInventoryExport}
+                                            disabled={isFullExporting}
+                                            className="h-24 flex-col gap-2 rounded-2xl border-2 border-slate-100 bg-white hover:bg-blue-50 text-slate-900 font-black shadow-sm hover:text-blue-900 hover:border-blue-200"
+                                            variant="outline"
+                                        >
+                                            {isFullExporting ? <Loader2 className="h-6 w-6 text-primary animate-spin" /> : <Package className="h-6 w-6 text-primary" />}
+                                            {isFullExporting ? 'Exporting...' : 'Export Inventory'}
+                                        </Button>
+
+                                        <Button
+                                            onClick={handleDeleteAllProducts}
+                                            disabled={isDeletingAllProducts}
+                                            className="h-24 flex-col gap-2 rounded-2xl border-2 border-red-100 bg-red-50 hover:bg-red-100 text-red-900 font-black shadow-sm border-dashed"
+                                            variant="outline"
+                                        >
+                                            {isDeletingAllProducts ? <Loader2 className="h-6 w-6 text-red-600 animate-spin" /> : <AlertTriangle className="h-6 w-6 text-red-600" />}
+                                            {isDeletingAllProducts ? 'Deleting...' : 'Clear All Products'}
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -780,6 +871,25 @@ export default function Settings() {
                     </div>
                 </div>
             </div>
+
+            <ActivationModal
+                isOpen={isActivationModalOpen}
+                onClose={() => setIsActivationModalOpen(false)}
+                onActivate={async (key) => {
+                    await window.api.activateLicense({
+                        licenseKey: key,
+                        planType: 'enterprise',
+                        shopName: settings.storeName || 'FasTo RMS User'
+                    });
+                    await refreshSettings();
+                }}
+            />
+
+            <DeleteAllProductsModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDeleteAll}
+            />
         </div>
     );
 }

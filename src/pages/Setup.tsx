@@ -4,20 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Store, User, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { Store, User, ArrowRight, Loader2, CheckCircle2, Sparkles, MapPin, Phone, ShieldCheck, Globe } from 'lucide-react';
+import logoFull from '@/assets/logo_full.png';
 
 export default function Setup() {
     const navigate = useNavigate();
-    const [step, setStep] = useState('shop');
+    const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
         shopName: '',
         shopPhone: '',
         shopAddress: '',
-        username: '',
+        username: 'admin',
         password: '',
         confirmPassword: ''
     });
@@ -26,13 +27,14 @@ export default function Setup() {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
-    const handleNext = () => {
-        if (!formData.shopName) {
-            alert("Shop Name is required");
+    const nextStep = () => {
+        if (step === 2 && !formData.shopName) {
             return;
         }
-        setStep('account');
+        setStep(prev => prev + 1);
     };
+
+    const prevStep = () => setStep(prev => prev - 1);
 
     const handleFinish = async () => {
         if (!formData.username || !formData.password) {
@@ -55,89 +57,196 @@ export default function Setup() {
             });
 
             if (result.success) {
-                // Determine legacy redirect or login
-                alert("Setup Complete! Please log in.");
-                navigate('/login');
-                // Force reload to clear AppGate state if needed, or rely on navigate
-                window.location.reload();
+                setIsSuccess(true);
+                // Wait for a bit to show success state before redirecting
+                setTimeout(() => {
+                    navigate('/login');
+                    window.location.reload();
+                }, 2000);
             } else {
                 alert("Setup failed: " + result.error);
+                setLoading(false);
             }
         } catch (error) {
             console.error(error);
             alert("An error occurred during setup.");
-        } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-            <Card className="w-full max-w-md border-t-4 border-t-primary shadow-xl">
-                <CardHeader className="text-center">
-                    <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
-                        <Store className="h-8 w-8 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl">Welcome to FasTo RMS</CardTitle>
-                    <CardDescription>Let's set up your shop profile and admin account.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={step} onValueChange={setStep} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-4">
-                            <TabsTrigger value="shop" disabled={loading}>1. Shop Profile</TabsTrigger>
-                            <TabsTrigger value="account" disabled={loading || !formData.shopName}>2. Owner Account</TabsTrigger>
-                        </TabsList>
+        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 overflow-hidden relative font-sans">
+            {/* Elegant Background Accents */}
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-100/50 -skew-x-12 transform origin-top-right transition-all duration-700" />
 
-                        <TabsContent value="shop" className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="space-y-2">
-                                <Label htmlFor="shopName">Shop Name <span className="text-red-500">*</span></Label>
-                                <Input id="shopName" placeholder="e.g. My Awesome Shop" value={formData.shopName} onChange={handleChange} autoFocus />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="shopPhone">Phone Number</Label>
-                                <Input id="shopPhone" placeholder="e.g. 054 123 4567" value={formData.shopPhone} onChange={handleChange} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="shopAddress">Location / Address</Label>
-                                <Input id="shopAddress" placeholder="e.g. Accra, Ghana" value={formData.shopAddress} onChange={handleChange} />
-                            </div>
-                        </TabsContent>
+            <div className="w-full max-w-xl relative">
 
-                        <TabsContent value="account" className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-300 mb-2 flex gap-2">
-                                <User className="h-4 w-4 shrink-0 mt-0.5" />
-                                <p>Create the main Administrator account for this shop. You can create more users later.</p>
+                <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative z-10 overflow-hidden bg-white">
+                    <div className="h-1.5 w-full bg-[#1e1b4b]" />
+                    {isSuccess ? (
+                        <CardContent className="py-16 text-center animate-scale-in">
+                            <div className="mx-auto mb-10">
+                                <img
+                                    src={logoFull}
+                                    alt="FasTo RMS"
+                                    className="h-24 w-auto mx-auto animate-bounce drop-shadow-2xl"
+                                />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="username">Username <span className="text-red-500">*</span></Label>
-                                <Input id="username" placeholder="admin" value={formData.username} onChange={handleChange} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
-                                <Input id="password" type="password" value={formData.password} onChange={handleChange} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
-                                <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
-                            </div>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                    {step === 'shop' ? (
-                        <Button className="w-full" onClick={handleNext}>
-                            Next Step <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
+                            <h2 className="text-4xl font-bold text-[#1e1b4b] mb-3 tracking-tight">You're All Set!</h2>
+                            <p className="text-muted-foreground text-lg mb-8 font-medium">
+                                Welcome to the FasTo family.
+                                <br />Redirecting to your new enterprise station...
+                            </p>
+                            <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                        </CardContent>
                     ) : (
-                        <div className="flex gap-2 w-full">
-                            <Button variant="outline" onClick={() => setStep('shop')} disabled={loading}>Back</Button>
-                            <Button className="flex-1" onClick={handleFinish} disabled={loading}>
-                                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Setting up...</> : <><CheckCircle2 className="mr-2 h-4 w-4" /> Finish Setup</>}
-                            </Button>
-                        </div>
+                        <>
+                            {step === 1 && (
+                                <div className="animate-fade-in-up">
+                                    <CardHeader className="text-center pt-10 pb-6">
+                                        <div className="mx-auto bg-indigo-50 p-4 rounded-full w-fit mb-4">
+                                            <Sparkles className="h-10 w-10 text-[#1e1b4b]" />
+                                        </div>
+                                        <CardTitle className="text-4xl font-bold tracking-tight text-[#1e1b4b]">Welcome to FasTo RMS</CardTitle>
+                                        <CardDescription className="text-lg pt-2 text-slate-500">
+                                            The professional enterprise solution for modern retail.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6 px-10">
+                                        <div className="grid grid-cols-1 gap-4 py-4">
+                                            <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                <div className="bg-indigo-100 p-2 rounded-lg"><Store className="h-5 w-5 text-[#1e1b4b]" /></div>
+                                                <div>
+                                                    <h4 className="font-semibold text-slate-900">Business Intelligence</h4>
+                                                    <p className="text-sm text-slate-500 font-medium">Detailed reports and stock tracking at your fingertips.</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                                <div className="bg-indigo-100 p-2 rounded-lg"><ShieldCheck className="h-5 w-5 text-[#1e1b4b]" /></div>
+                                                <div>
+                                                    <h4 className="font-semibold text-slate-900">Enterprise Security</h4>
+                                                    <p className="text-sm text-slate-500 font-medium">Secure daily backups and audit logs for peace of mind.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="pb-10 px-10">
+                                        <Button className="w-full h-12 text-lg font-bold bg-[#1e1b4b] hover:bg-[#312e81] shadow-lg shadow-indigo-900/10 group" onClick={nextStep}>
+                                            Get Started <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                            )}
+
+                            {step === 2 && (
+                                <div className="animate-fade-in-up">
+                                    <CardHeader className="pt-10 pb-6">
+                                        <CardTitle className="text-2xl font-bold">Shop Profile</CardTitle>
+                                        <CardDescription>Tell us about your business</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-5 px-10">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="shopName" className="flex items-center gap-2">
+                                                <Store className="h-4 w-4 text-primary" /> Shop Name <span className="text-ghana-red">*</span>
+                                            </Label>
+                                            <Input id="shopName" placeholder="e.g. FasTo Store" value={formData.shopName} onChange={handleChange} className="h-11" autoFocus />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="shopPhone" className="flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-primary" /> Phone Number
+                                            </Label>
+                                            <Input id="shopPhone" placeholder="054 123 4567" value={formData.shopPhone} onChange={handleChange} className="h-11" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="shopAddress" className="flex items-center gap-2">
+                                                <MapPin className="h-4 w-4 text-primary" /> Location
+                                            </Label>
+                                            <Input id="shopAddress" placeholder="Accra, Ghana" value={formData.shopAddress} onChange={handleChange} className="h-11" />
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex gap-3 pb-10 px-10">
+                                        <Button variant="ghost" onClick={prevStep} className="h-12 px-6 text-slate-500">Back</Button>
+                                        <Button className="flex-1 h-12 text-lg font-bold bg-[#1e1b4b] hover:bg-[#312e81]" onClick={nextStep} disabled={!formData.shopName}>
+                                            Next <ArrowRight className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                            )}
+
+                            {step === 3 && (
+                                <div className="animate-fade-in-up">
+                                    <CardHeader className="pt-10 pb-6">
+                                        <CardTitle className="text-2xl font-bold">Account Setup</CardTitle>
+                                        <CardDescription>Create your administrator credentials</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-5 px-10">
+                                        <div className="bg-primary/5 p-3 rounded-lg text-sm text-primary mb-2 flex gap-3 border border-primary/10">
+                                            <User className="h-5 w-5 shrink-0 mt-0.5" />
+                                            <p>This will be your <strong>Owner</strong> account. You will have full access to all features.</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="username">Username</Label>
+                                            <Input id="username" placeholder="admin" value={formData.username} onChange={handleChange} className="h-11" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="password">Password</Label>
+                                                <Input id="password" type="password" value={formData.password} onChange={handleChange} className="h-11" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="confirmPassword">Confirm</Label>
+                                                <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} className="h-11" />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex gap-3 pb-10 px-10">
+                                        <Button variant="ghost" onClick={prevStep} className="h-12 px-6 text-slate-500">Back</Button>
+                                        <Button className="flex-1 h-12 text-lg font-bold bg-[#1e1b4b] hover:bg-[#312e81]" onClick={nextStep} disabled={!formData.password || formData.password !== formData.confirmPassword}>
+                                            Almost Done <ArrowRight className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                            )}
+
+                            {step === 4 && (
+                                <div className="animate-fade-in-up">
+                                    <CardHeader className="text-center pt-10 pb-6">
+                                        <div className="mx-auto bg-ghana-gold/10 p-4 rounded-full w-fit mb-4">
+                                            <Globe className="h-10 w-10 text-ghana-gold" />
+                                        </div>
+                                        <CardTitle className="text-2xl font-bold">Review & Finish</CardTitle>
+                                        <CardDescription>Ready to launch {formData.shopName}?</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="px-10 pb-6">
+                                        <div className="rounded-xl border bg-slate-50/50 dark:bg-slate-900/50 p-4 space-y-3">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Shop Name:</span>
+                                                <span className="font-semibold">{formData.shopName}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Location:</span>
+                                                <span className="font-semibold">{formData.shopAddress || 'Not specified'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Admin User:</span>
+                                                <span className="font-semibold text-ghana-green">{formData.username}</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="flex gap-3 pb-10 px-10">
+                                        <Button variant="ghost" onClick={prevStep} className="h-12 px-6 text-slate-500" disabled={loading}>Back</Button>
+                                        <Button className="flex-1 h-12 text-lg font-bold bg-[#1e1b4b] hover:bg-[#312e81] text-white" onClick={handleFinish} disabled={loading}>
+                                            {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
+                                            Launch FasTo RMS
+                                        </Button>
+                                    </CardFooter>
+                                </div>
+                            )}
+                        </>
                     )}
-                </CardFooter>
-            </Card>
+                </Card>
+            </div>
         </div>
     );
 }
+

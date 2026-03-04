@@ -1,0 +1,55 @@
+{
+    "appId": "com.fastoretail.fastorms",
+    "productName": "FasTo RMS",
+    "copyright": "Copyright © 2026 FasTo Team",
+    "directories": {
+        "output": "release",
+        "buildResources": "build"
+    },
+    "files": [
+        "dist/**/*",
+        "electron/dist/**/*",
+        "electron/package.json",
+        "!node_modules/**/*"
+    ],
+    "extraResources": [
+        {
+            "from": "electron/dist/node_modules",
+            "to": "node_modules",
+            "filter": [
+                "**/*"
+            ]
+        }
+    ],
+    "asar": true,
+    "asarUnpack": [
+        "**/node_modules/better-sqlite3/**/*",
+        "**/node_modules/bcryptjs/**/*",
+        "**/node_modules/exceljs/**/*"
+    ],
+    "win": {
+        "target": [
+            {
+                "target": "nsis",
+                "arch": [
+                    "x64"
+                ]
+            }
+        ],
+        "icon": "build/icon.ico",
+        "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true,
+        "allowElevation": true,
+        "installerIcon": "build/icon.ico",
+        "uninstallerIcon": "build/icon.ico",
+        "installerHeaderIcon": "build/icon.ico",
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true,
+        "shortcutName": "FasTo RMS",
+        "deleteAppDataOnUninstall": false
+    },
+    "publish": null
+}
