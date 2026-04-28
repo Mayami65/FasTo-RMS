@@ -1,8 +1,5 @@
 name: Build & Publish Release
 
-permissions:
-  contents: write
-
 on:
   push:
     tags:
@@ -62,14 +59,11 @@ jobs:
         run: npm run build
 
       - name: Package Electron app
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run package
 
       - name: Create GitHub Release and upload artifacts
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.GH_TOKEN }}
           tag: ${{ github.ref_name }}
-          files: |
+          artifacts: |
             release/FasTo-RMS-Setup-*.exe
