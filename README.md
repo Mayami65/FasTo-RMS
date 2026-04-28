@@ -1,5 +1,7 @@
 # Dee's Joy Retail Management System (DJRMS)
 
+[![Latest Release](https://img.shields.io/github/v/release/Mayami65/FasTo-RMS?label=release)](https://github.com/Mayami65/FasTo-RMS/releases/tag/v1.0.1)
+
 An offline-first desktop application for managing retail operations, built with Electron, React, and SQLite.
 
 ## Prerequisites

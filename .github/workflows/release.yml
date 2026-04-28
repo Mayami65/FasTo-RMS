@@ -66,9 +66,4 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
           files: |
-            release/*.exe
-            release/**/*.exe
-            release/*.zip
-            release/**/*.zip
-            release/*.msi
-            release/**/*.msi
+            release/FasTo-RMS-Setup-*.exe

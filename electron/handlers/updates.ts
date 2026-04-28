@@ -4,14 +4,38 @@ import { logger } from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
+function isMissingGitHubReleaseFeed(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.includes('releases.atom') && message.includes('404');
+}
+
 // Configure auto updater
 autoUpdater.logger = logger;
-autoUpdater.checkForUpdatesAndNotify();
 
 export function setupUpdates(mainWindow: BrowserWindow) {
+    if (!app.isPackaged) {
+        return;
+    }
+
+    setTimeout(() => {
+        autoUpdater.checkForUpdates().catch(err => {
+            if (isMissingGitHubReleaseFeed(err)) {
+                logger.info('No published release feed found yet; skipping update check.');
+                return;
+            }
+
+            logger.error('Error checking for updates: ' + err);
+        });
+    }, 5000);
+
     // Check for updates every hour after app starts
     setInterval(() => {
         autoUpdater.checkForUpdates().catch(err => {
+            if (isMissingGitHubReleaseFeed(err)) {
+                logger.info('No published release feed found yet; skipping update check.');
+                return;
+            }
+
             logger.error('Error checking for updates: ' + err);
         });
     }, 60 * 60 * 1000); // 1 hour
@@ -49,6 +73,12 @@ export function setupUpdates(mainWindow: BrowserWindow) {
 
     // Error handler
     autoUpdater.on('error', (error) => {
+        if (isMissingGitHubReleaseFeed(error)) {
+            logger.info('No published release feed found yet; skipping update error notification.');
+            mainWindow.webContents.send('update-not-available');
+            return;
+        }
+
         logger.error('Update error: ' + error.message);
         mainWindow.webContents.send('update-error', error.message);
     });
@@ -59,6 +89,11 @@ export function setupUpdates(mainWindow: BrowserWindow) {
             const result = await autoUpdater.checkForUpdates();
             return result;
         } catch (error: any) {
+            if (isMissingGitHubReleaseFeed(error)) {
+                logger.info('No published release feed found yet; reporting no update.');
+                return { updateAvailable: false };
+            }
+
             logger.error('Error checking for updates: ' + error.message);
             throw error;
         }

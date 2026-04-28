@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AlertCircle, Download, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +17,7 @@ const UpdateChecker: React.FC = () => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [updateReady, setUpdateReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [noUpdatesMessage, setNoUpdatesMessage] = useState(false);
 
   useEffect(() => {
     if (!window.api) return;
@@ -27,11 +28,14 @@ const UpdateChecker: React.FC = () => {
       setUpdateInfo(data);
       setUpdateAvailable(true);
       setError(null);
+      setNoUpdatesMessage(false);
     });
 
     // Listen for update not available
     window.api.onUpdateNotAvailable(() => {
       console.log("No updates available");
+      setNoUpdatesMessage(true);
+      setError(null);
     });
 
     // Listen for download progress
@@ -45,6 +49,7 @@ const UpdateChecker: React.FC = () => {
       console.log("Update downloaded:", data);
       setUpdateReady(true);
       setDownloading(false);
+      setNoUpdatesMessage(false);
     });
 
     // Listen for errors
@@ -52,6 +57,7 @@ const UpdateChecker: React.FC = () => {
       console.error("Update error:", error);
       setError(error);
       setDownloading(false);
+      setNoUpdatesMessage(false);
     });
 
     // Check for updates on mount
@@ -163,6 +169,18 @@ const UpdateChecker: React.FC = () => {
           >
             <Download className="w-4 h-4 mr-2" /> Download & Install
           </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (noUpdatesMessage) {
+    return (
+      <Alert className="m-4 bg-slate-50 border-slate-200">
+        <CheckCircle2 className="h-4 w-4 text-slate-600" />
+        <AlertTitle className="text-slate-900">Up to date</AlertTitle>
+        <AlertDescription className="text-slate-700">
+          No updates available yet.
         </AlertDescription>
       </Alert>
     );
