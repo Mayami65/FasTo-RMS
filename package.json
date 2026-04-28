@@ -1,7 +1,7 @@
 {
   "name": "fasto-rms",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "FasTo RMS - Dee's Joy Retail Management System",
   "author": "FasTo Team",
   "main": "electron/dist/main.js",

@@ -66,6 +66,7 @@ jobs:
       - name: Create GitHub Release and upload artifacts
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.GH_TOKEN }}
           tag: ${{ github.ref_name }}
           artifacts: |
             release/FasTo-RMS-Setup-*.exe

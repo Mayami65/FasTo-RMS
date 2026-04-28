@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, Download, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,14 @@ const UpdateChecker: React.FC = () => {
   const [updateReady, setUpdateReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noUpdatesMessage, setNoUpdatesMessage] = useState(false);
+  const noUpdatesTimerRef = useRef<number | null>(null);
+
+  const clearNoUpdatesTimer = () => {
+    if (noUpdatesTimerRef.current !== null) {
+      window.clearTimeout(noUpdatesTimerRef.current);
+      noUpdatesTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!window.api) return;
@@ -25,6 +33,7 @@ const UpdateChecker: React.FC = () => {
     // Listen for update available
     window.api.onUpdateAvailable((data: UpdateInfo) => {
       console.log("Update available:", data);
+      clearNoUpdatesTimer();
       setUpdateInfo(data);
       setUpdateAvailable(true);
       setError(null);
@@ -34,8 +43,13 @@ const UpdateChecker: React.FC = () => {
     // Listen for update not available
     window.api.onUpdateNotAvailable(() => {
       console.log("No updates available");
+      clearNoUpdatesTimer();
       setNoUpdatesMessage(true);
       setError(null);
+      noUpdatesTimerRef.current = window.setTimeout(() => {
+        setNoUpdatesMessage(false);
+        noUpdatesTimerRef.current = null;
+      }, 3500);
     });
 
     // Listen for download progress
@@ -47,6 +61,7 @@ const UpdateChecker: React.FC = () => {
     // Listen for update downloaded
     window.api.onUpdateDownloaded((data: UpdateInfo) => {
       console.log("Update downloaded:", data);
+      clearNoUpdatesTimer();
       setUpdateReady(true);
       setDownloading(false);
       setNoUpdatesMessage(false);
@@ -55,6 +70,7 @@ const UpdateChecker: React.FC = () => {
     // Listen for errors
     window.api.onUpdateError((error: string) => {
       console.error("Update error:", error);
+      clearNoUpdatesTimer();
       setError(error);
       setDownloading(false);
       setNoUpdatesMessage(false);
@@ -75,7 +91,10 @@ const UpdateChecker: React.FC = () => {
       60 * 60 * 1000,
     ); // 1 hour
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearNoUpdatesTimer();
+    };
   }, []);
 
   const handleDownload = async () => {
@@ -176,7 +195,7 @@ const UpdateChecker: React.FC = () => {
 
   if (noUpdatesMessage) {
     return (
-      <Alert className="m-4 bg-slate-50 border-slate-200">
+      <Alert className="fixed right-4 top-4 z-50 w-[320px] border-slate-200 bg-white/95 shadow-lg backdrop-blur-md">
         <CheckCircle2 className="h-4 w-4 text-slate-600" />
         <AlertTitle className="text-slate-900">Up to date</AlertTitle>
         <AlertDescription className="text-slate-700">
