@@ -9,7 +9,7 @@ export interface IElectronAPI {
     ping: () => Promise<string>;
 
     // Database functions
-    getProducts: (params?: { page?: number; limit?: number; search?: string; categoryId?: number | 'none' | null; stockStatus?: 'all' | 'low_stock' | 'out_of_stock' | 'in_stock' }) => Promise<{ data: Product[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>;
+    getProducts: (params?: { page?: number; limit?: number; search?: string; categoryId?: number | 'none' | null; stockStatus?: 'all' | 'low_stock' | 'out_of_stock' | 'in_stock'; tripName?: string }) => Promise<{ data: Product[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>;
     addProduct: (product: Product) => Promise<{ success: boolean; id?: number; error?: string }>;
     updateProduct: (product: Product) => Promise<{ success: boolean; error?: string }>;
     deleteProduct: (id: number) => Promise<{ success: boolean; error?: string }>;
@@ -49,9 +49,10 @@ export interface IElectronAPI {
     getOperationalIntelligence: (range: { startDate: string; endDate: string; compare?: string; storeId?: string }) => Promise<any>;
 
     // Bulk Import
-    downloadTemplate: () => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    downloadTemplate: () => Promise<any>;
     selectExcelFile: () => Promise<string | null>;
-    importProducts: (filePath: string) => Promise<{ success: boolean; summary?: any; error?: string }>;
+    importProducts: (filePath: string, tripName?: string) => Promise<{ success: boolean; summary?: any; error?: string }>;
+    getTripNames: () => Promise<string[]>;
     getDailySummary: (date: string) => Promise<any>;
     closeDayTransactions: (data: { date: string, summary: any, notes: string, userId?: number }) => Promise<{ success: boolean; error?: string }>;
     getClosingHistory: () => Promise<any[]>;
@@ -108,6 +109,30 @@ export interface IElectronAPI {
     getLicenseStatus: () => Promise<{ license: any | null; machineId: string; isMachineBound: boolean }>;
     activateLicense: (payload: { licenseKey: string; planType: string; shopName: string }) => Promise<{ success: boolean; plan?: string; error?: string }>;
     deactivateLicense: () => Promise<{ success: boolean; error?: string }>;
+
+    // Update Handlers
+    checkForUpdates: () => Promise<any>;
+    downloadUpdate: () => Promise<{ success: boolean }>;
+    installUpdate: () => Promise<{ success: boolean }>;
+    listBackups: () => Promise<{
+        backups: Array<{
+            filename: string;
+            path: string;
+            sizeBytes: number;
+            sizeMB: string;
+            createdAt: string;
+            createdAtFormatted: string;
+        }>;
+    }>;
+    restoreBackup: (backupPath: string) => Promise<{ success: boolean; message?: string }>;
+    deleteBackup: (backupPath: string) => Promise<{ success: boolean; message?: string }>;
+
+    // Update Event Listeners
+    onUpdateAvailable: (callback: (data: { version: string; releaseDate?: string; releaseNotes?: string }) => void) => void;
+    onUpdateNotAvailable: (callback: () => void) => void;
+    onUpdateDownloadProgress: (callback: (progress: number) => void) => void;
+    onUpdateDownloaded: (callback: (data: { version: string }) => void) => void;
+    onUpdateError: (callback: (error: string) => void) => void;
 }
 
 declare global {

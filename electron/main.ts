@@ -4,6 +4,7 @@ import { initDb } from './db';
 import { registerAllHandlers } from './ipc';
 import { ensureDirectories } from './utils/paths';
 import { logger } from './utils/logger';
+import { setupUpdates } from './handlers/updates';
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
@@ -84,23 +85,59 @@ function createWindow() {
     }
 }
 
+// Register custom protocol for serving local media files
+const { protocol, net } = require('electron') as typeof import('electron');
+const { pathToFileURL } = require('url') as typeof import('url');
+
+// CRITICAL: Register schemes as privileged BEFORE app is ready
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'media',
+        privileges: {
+            standard: true,
+            secure: true,
+            supportFetchAPI: true,
+            bypassCSP: true,
+            stream: true
+        }
+    }
+]);
+
 app.whenReady().then(() => {
     try {
         ensureDirectories();
         logger.info('Starting application v' + app.getVersion());
 
-        // Register custom protocol for serving local media files
-        const { protocol, net } = require('electron') as typeof import('electron');
-        const { pathToFileURL } = require('url') as typeof import('url');
-
         protocol.handle('media', (request: Request) => {
-            let filePath = request.url.replace('media://', '');
-            if (filePath.startsWith('/')) filePath = filePath.slice(1);
-            const decodedPath = decodeURIComponent(filePath);
             try {
-                return net.fetch(pathToFileURL(decodedPath).toString());
-            } catch (error) {
-                logger.error('Failed to fetch media file: ' + decodedPath);
+                // Better path extraction for Windows
+                // Standard protocols normalize media://C:/path to media://c/path
+                const url = new URL(request.url);
+                let fullPath = '';
+
+                if (process.platform === 'win32') {
+                    // host is the drive letter 'c', pathname is '/Users/...'
+                    // We need to reconstruct 'c:/Users/...'
+                    const drive = url.hostname;
+                    const rest = url.pathname;
+                    fullPath = path.join(`${drive}:`, rest);
+                } else {
+                    fullPath = url.pathname;
+                }
+
+                // Decode URI component (handles spaces and special chars)
+                const decodedPath = decodeURIComponent(fullPath);
+
+                // Normalize slashes for the current OS
+                const normalizedPath = path.normalize(decodedPath);
+
+                logger.info(`Protocol 'media' fetching: ${normalizedPath}`);
+
+                // Convert to file:// URL for net.fetch
+                const fileUrl = pathToFileURL(normalizedPath).toString();
+                return net.fetch(fileUrl);
+            } catch (error: any) {
+                logger.error('Failed to fetch media file: ' + error.message);
                 return new Response('File not found', { status: 404 });
             }
         });
@@ -124,6 +161,11 @@ app.whenReady().then(() => {
         logger.info('All IPC handlers registered.');
 
         createWindow();
+
+        // Setup auto-update after window is created
+        if (mainWindow) {
+            setupUpdates(mainWindow);
+        }
     } catch (error: any) {
         logger.error('CRITICAL: Failed to initialize application: ' + error.message);
     }

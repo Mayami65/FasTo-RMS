@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { app } from 'electron';
-import * as isDev from 'electron-is-dev';
 import * as bcrypt from 'bcryptjs';
 import { getAppPaths } from './utils/paths';
 import { logger } from './utils/logger';
@@ -140,6 +139,7 @@ export function initDb() {
         description TEXT,
         category_id INTEGER,
         image_path TEXT,
+        trip_name TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(category_id) REFERENCES categories(id)
     );
@@ -425,6 +425,7 @@ export function initDb() {
         addColumnIfNotExists('sales', 'discount_amount', 'REAL DEFAULT 0');
         addColumnIfNotExists('sales', 'coupon_id', 'INTEGER');
         addColumnIfNotExists('sale_items', 'discount_amount', 'REAL DEFAULT 0');
+        addColumnIfNotExists('products', 'trip_name', 'TEXT');
 
         // Migrate refunds table: total_amount -> refund_amount
         try {

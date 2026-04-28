@@ -10,22 +10,17 @@
         "dist/**/*",
         "electron/dist/**/*",
         "electron/package.json",
-        "!node_modules/**/*"
-    ],
-    "extraResources": [
-        {
-            "from": "electron/dist/node_modules",
-            "to": "node_modules",
-            "filter": [
-                "**/*"
-            ]
-        }
+        "node_modules/better-sqlite3/**/*",
+        "node_modules/bcryptjs/**/*",
+        "node_modules/exceljs/**/*",
+        "node_modules/bindings/**/*",
+        "node_modules/file-uri-to-path/**/*"
     ],
     "asar": true,
     "asarUnpack": [
         "**/node_modules/better-sqlite3/**/*",
-        "**/node_modules/bcryptjs/**/*",
-        "**/node_modules/exceljs/**/*"
+        "**/node_modules/bindings/**/*",
+        "**/node_modules/file-uri-to-path/**/*"
     ],
     "win": {
         "target": [
@@ -36,20 +31,25 @@
                 ]
             }
         ],
-        "icon": "build/icon.ico",
+        "icon": "build/icon.png",
         "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
+        "artifactName": "FasTo-RMS-Setup-${version}.${ext}",
         "oneClick": false,
+        "perMachine": false,
         "allowToChangeInstallationDirectory": true,
         "allowElevation": true,
-        "installerIcon": "build/icon.ico",
-        "uninstallerIcon": "build/icon.ico",
-        "installerHeaderIcon": "build/icon.ico",
         "createDesktopShortcut": true,
         "createStartMenuShortcut": true,
         "shortcutName": "FasTo RMS",
         "deleteAppDataOnUninstall": false
     },
-    "publish": null
+    "publish": [
+        {
+            "provider": "github",
+            "owner": "YOUR_GITHUB_USERNAME",
+            "repo": "fasto-rms"
+        }
+    ]
 }

@@ -872,18 +872,7 @@ export default function Settings() {
                 </div>
             </div>
 
-            <ActivationModal
-                isOpen={isActivationModalOpen}
-                onClose={() => setIsActivationModalOpen(false)}
-                onActivate={async (key) => {
-                    await window.api.activateLicense({
-                        licenseKey: key,
-                        planType: 'enterprise',
-                        shopName: settings.storeName || 'FasTo RMS User'
-                    });
-                    await refreshSettings();
-                }}
-            />
+
 
             <DeleteAllProductsModal
                 isOpen={isDeleteModalOpen}

@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFeatures } from '@/hooks/useFeatures';
 
 interface POSProductGridProps {
@@ -220,55 +219,55 @@ export function POSProductGrid({ products, categories, onAddToCart }: POSProduct
                 )}
 
                 <Dialog open={isVariantOpen} onOpenChange={setIsVariantOpen}>
-                    <DialogContent className="max-w-md p-0 overflow-hidden border-none rounded-2xl shadow-2xl">
-                        <DialogHeader className="p-6 bg-slate-900 text-white">
+                    <DialogContent className="max-w-md p-0 overflow-hidden border-none rounded-2xl shadow-2xl flex flex-col h-auto max-h-[85vh]">
+                        <DialogHeader className="p-6 bg-slate-900 text-white shrink-0">
                             <DialogTitle className="text-2xl font-bold">Select Variation</DialogTitle>
                             <DialogDescription className="text-slate-400">
                                 Choose a specific type for <span className="text-white font-semibold">{selectedProduct?.name}</span>
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="p-4 bg-slate-50">
-                            <ScrollArea className="max-h-[60vh] pr-4">
-                                <div className="grid gap-3">
-                                    {selectedProduct?.variants?.map((variant: any) => (
-                                        <button
-                                            key={variant.id}
-                                            disabled={variant.stock_quantity === 0}
-                                            onClick={() => handleVariantSelect(variant)}
-                                            className={cn(
-                                                "w-full text-left p-4 rounded-xl border bg-white transition-all group relative overflow-hidden shadow-sm hover:shadow-md",
-                                                variant.stock_quantity === 0
-                                                    ? "opacity-50 cursor-not-allowed border-slate-200"
-                                                    : "border-slate-200 hover:border-primary/50 hover:bg-primary/5 active:scale-[0.98]"
-                                            )}
-                                        >
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="font-bold text-slate-800 text-lg">{variant.variation_name}</span>
-                                                <span className="text-primary font-black text-xl">GH₵ {variant.selling_price.toFixed(2)}</span>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-50 min-h-0">
+                            <div className="grid gap-3">
+                                {selectedProduct?.variants?.map((variant: any) => (
+                                    <button
+                                        key={variant.id}
+                                        disabled={variant.stock_quantity === 0}
+                                        onClick={() => handleVariantSelect(variant)}
+                                        className={cn(
+                                            "w-full text-left p-4 rounded-xl border bg-white transition-all group relative overflow-hidden shadow-sm hover:shadow-md",
+                                            variant.stock_quantity === 0
+                                                ? "opacity-50 cursor-not-allowed border-slate-200"
+                                                : "border-slate-200 hover:border-primary/50 hover:bg-primary/5 active:scale-[0.98]"
+                                        )}
+                                    >
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-bold text-slate-800 text-lg leading-tight">{variant.variation_name}</span>
+                                            <span className="text-primary font-black text-xl whitespace-nowrap ml-3">GH₵ {variant.selling_price.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Badge variant="outline" className="rounded-md font-mono text-[10px] h-5 bg-slate-50 text-slate-500">
+                                                {variant.sku}
+                                            </Badge>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className={cn("w-2 h-2 rounded-full", variant.stock_quantity <= variant.reorder_level ? "bg-amber-500" : "bg-emerald-500")} />
+                                                <span className={cn(
+                                                    "text-xs font-bold",
+                                                    variant.stock_quantity <= variant.reorder_level ? "text-amber-600" : "text-emerald-600"
+                                                )}>
+                                                    {variant.stock_quantity} available
+                                                </span>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <Badge variant="outline" className="rounded-md font-mono text-[10px] h-5 bg-slate-50 text-slate-500">
-                                                    {variant.sku}
-                                                </Badge>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className={cn("w-2 h-2 rounded-full", variant.stock_quantity <= variant.reorder_level ? "bg-amber-500" : "bg-emerald-500")} />
-                                                    <span className={cn(
-                                                        "text-xs font-bold",
-                                                        variant.stock_quantity <= variant.reorder_level ? "text-amber-600" : "text-emerald-600"
-                                                    )}>
-                                                        {variant.stock_quantity} available
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {variant.stock_quantity > 0 && (
-                                                <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </ScrollArea>
+                                        </div>
+                                        {variant.stock_quantity > 0 && (
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="p-4 bg-white border-t border-slate-100 flex justify-end">
+
+                        <div className="p-4 bg-white border-t border-slate-100 flex justify-end shrink-0">
                             <Button variant="ghost" onClick={() => setIsVariantOpen(false)} className="rounded-lg px-6 font-bold">
                                 Close
                             </Button>

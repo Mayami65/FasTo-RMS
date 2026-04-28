@@ -40,6 +40,8 @@ interface ProductListProps {
     onCategoryChange: (id: number | 'none' | null) => void;
     stockStatus: 'all' | 'low_stock' | 'out_of_stock' | 'in_stock';
     onStockStatusChange: (status: 'all' | 'low_stock' | 'out_of_stock' | 'in_stock') => void;
+    tripName: string;
+    onTripNameChange: (tripName: string) => void;
 }
 
 export function ProductList({
@@ -54,11 +56,14 @@ export function ProductList({
     categoryId,
     onCategoryChange,
     stockStatus,
-    onStockStatusChange
+    onStockStatusChange,
+    tripName,
+    onTripNameChange
 }: ProductListProps) {
     const { page, totalPages } = pagination;
     const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
     const [categories, setCategories] = useState<Category[]>([]);
+    const [tripNames, setTripNames] = useState<string[]>([]);
     const [imagePaths, setImagePaths] = useState<Record<string, string>>({});
 
     useEffect(() => {
@@ -88,6 +93,16 @@ export function ProductList({
             }
         };
         loadCategories();
+
+        const loadTripNames = async () => {
+            try {
+                const names = await window.api.getTripNames();
+                setTripNames(names);
+            } catch (error) {
+                console.error("Failed to load trip names", error);
+            }
+        };
+        loadTripNames();
     }, []);
 
 
@@ -102,7 +117,8 @@ export function ProductList({
                 limit: 100000,
                 search,
                 categoryId,
-                stockStatus
+                stockStatus,
+                tripName
             });
 
             const exportData = response.data || [];
@@ -150,6 +166,7 @@ export function ProductList({
         onSearchChange('');
         onCategoryChange(null);
         onStockStatusChange('all');
+        onTripNameChange('all');
     };
 
     const toggleRow = (id: number) => {
@@ -216,7 +233,23 @@ export function ProductList({
                         </SelectContent>
                     </Select>
 
-                    {(search || categoryId !== null || stockStatus !== 'all') && (
+                    <Select
+                        value={tripName}
+                        onValueChange={onTripNameChange}
+                    >
+                        <SelectTrigger className="w-[180px] h-10 bg-white border-slate-200">
+                            <SelectValue placeholder="Trip / Batch" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200">
+                            <SelectItem value="all">All Trips</SelectItem>
+                            <SelectItem value="undefined_sizes">⚠️ Needs Size Update</SelectItem>
+                            {tripNames.map((name) => (
+                                <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {(search || categoryId !== null || stockStatus !== 'all' || tripName !== 'all') && (
                         <Button
                             variant="ghost"
                             size="sm"

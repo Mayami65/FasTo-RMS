@@ -31,10 +31,22 @@ export function registerSetupHandlers(ipcMain: IpcMain, db: AppDatabase) {
             // Transaction: Create Settings + Create User
             const transaction = db.transaction(() => {
                 // 1. Save Shop Profile to Settings
+                // Save under BOTH the camelCase keys (used by SettingsContext/receipt)
+                // and snake_case keys (legacy compatibility)
                 const insertSetting = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+                insertSetting.run('storeName', shopName);
                 insertSetting.run('shop_name', shopName);
-                if (shopPhone) insertSetting.run('shop_phone', shopPhone);
-                if (shopAddress) insertSetting.run('shop_address', shopAddress);
+                if (shopPhone) {
+                    insertSetting.run('storePhone', shopPhone);
+                    insertSetting.run('shop_phone', shopPhone);
+                }
+                if (shopAddress) {
+                    insertSetting.run('storeAddress', shopAddress);
+                    insertSetting.run('shop_address', shopAddress);
+                }
+                // Set a default receipt header using the shop name
+                insertSetting.run('receiptHeader', `WELCOME TO ${shopName.toUpperCase()}`);
+                insertSetting.run('receiptFooter', 'THANK YOU FOR YOUR PATRONAGE!\nItems can be exchanged within 7 days.\nPlease keep this receipt for returns.');
 
                 // 2. Create Owner User
                 const hashedPassword = bcrypt.hashSync(password, 10);

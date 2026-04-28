@@ -71,10 +71,17 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
                 window.api.getLicenseStatus()
             ]);
 
+            // The DB may store keys as snake_case (shop_name) or camelCase (storeName).
+            // Normalize: prefer camelCase but fall back to snake_case equivalents.
+            const normalized = { ...data };
+            if (!normalized.storeName && normalized.shop_name) normalized.storeName = normalized.shop_name;
+            if (!normalized.storePhone && normalized.shop_phone) normalized.storePhone = normalized.shop_phone;
+            if (!normalized.storeAddress && normalized.shop_address) normalized.storeAddress = normalized.shop_address;
+
             setSettings(prev => ({
                 ...prev,
-                ...data,
-                tier: (data.tier as SubscriptionTier) || prev.tier,
+                ...normalized,
+                tier: (normalized.tier as SubscriptionTier) || prev.tier,
             }));
 
             setLicense(licenseStatus.license);

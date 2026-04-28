@@ -41,7 +41,18 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
     });
 
     // Get Products
-    ipcMain.handle('get-products', async (_event, { page = 1, limit = 10, search = '', categoryId = null, stockStatus = 'all' } = {}) => {
+    ipcMain.handle('get-trip-names', async () => {
+        if (!db) return [];
+        try {
+            const trips = db.prepare('SELECT DISTINCT trip_name FROM products WHERE trip_name IS NOT NULL AND trip_name != "" ORDER BY trip_name DESC').all() as any[];
+            return trips.map(t => t.trip_name);
+        } catch (error) {
+            console.error('Failed to get trip names:', error);
+            return [];
+        }
+    });
+
+    ipcMain.handle('get-products', async (_event, { page = 1, limit = 10, search = '', categoryId = null, stockStatus = 'all', tripName = 'all' } = {}) => {
         if (!db) return { data: [], pagination: { total: 0, page: 1, limit: 10, totalPages: 0 } };
         try {
             const offset = (page - 1) * limit;
@@ -79,6 +90,19 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                 const stockClause = ' AND p.stock_quantity > p.reorder_level';
                 query += stockClause;
                 countQuery += stockClause;
+            }
+
+            if (tripName && tripName !== 'all') {
+                if (tripName === 'undefined_sizes') {
+                    const undefinedClause = ` AND p.id IN (SELECT product_id FROM product_variants WHERE variation_name LIKE 'Undefined%')`;
+                    query += undefinedClause;
+                    countQuery += undefinedClause;
+                } else {
+                    const tripClause = ' AND p.trip_name = ?';
+                    query += tripClause;
+                    countQuery += tripClause;
+                    params.push(tripName);
+                }
             }
 
             const totalResult = db.prepare(countQuery).get(...params) as any;
@@ -437,7 +461,7 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
         return result.filePaths[0];
     });
 
-    ipcMain.handle('import-products', async (_event, filePath) => {
+    ipcMain.handle('import-products', async (_event, filePath, tripName: string = '') => {
         if (!db) return { success: false, error: 'Database not initialized' };
         try {
             const ExcelJS = require('exceljs');
@@ -470,14 +494,11 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                     const header = headers[colNumber];
                     if (header) {
                         let value = cell.value;
-                        // Handle potential object values from exceljs (like formulas, rich text, or dates)
                         if (value && typeof value === 'object') {
                             if ('result' in value) value = (value as any).result;
                             else if ('text' in value) value = (value as any).text;
                             else if ('richText' in value) value = (value as any).richText.map((t: any) => t.text).join('');
                         }
-
-                        // Treat null/undefined as empty string for string fields
                         rowData[header] = value !== null && value !== undefined ? value : '';
                         if (value !== null && value !== undefined && value !== '') hasData = true;
                     }
@@ -496,7 +517,6 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
             const errors: string[] = [];
             const productImagesDir = path.join(app.getPath('userData'), 'product_images');
 
-            // Find key column names (normalized)
             const findCol = (row: any, ...aliases: string[]) => {
                 for (const alias of aliases) {
                     const normalizedAlias = alias.toLowerCase().replace(/\s+/g, '');
@@ -525,8 +545,8 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                 }
 
                 const insertProduct = db!.prepare(`
-                    INSERT INTO products (name, sku, category, category_id, cost_price, selling_price, stock_quantity, reorder_level, description, image_path)
-                    VALUES (@name, @sku, @category, @category_id, @cost_price, @selling_price, @stock_quantity, @reorder_level, @description, @image_path)
+                    INSERT INTO products (name, sku, category, category_id, cost_price, selling_price, stock_quantity, reorder_level, description, image_path, trip_name)
+                    VALUES (@name, @sku, @category, @category_id, @cost_price, @selling_price, @stock_quantity, @reorder_level, @description, @image_path, @trip_name)
                 `);
 
                 const insertVariant = db!.prepare(`
@@ -536,6 +556,9 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
 
                 const checkCategory = db!.prepare('SELECT id FROM categories WHERE name = ? COLLATE NOCASE');
                 const insertCategory = db!.prepare('INSERT INTO categories (name, color) VALUES (?, ?)');
+
+                // Random Number Generator for Sequential SKU fallback
+                const generateSequence = () => Math.floor(Math.random() * 900) + 100;
 
                 for (const [productName, groupRows] of Object.entries(productGroups)) {
                     try {
@@ -554,6 +577,20 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                                 categoryId = info.lastInsertRowid;
                             }
                         }
+
+                        // Auto SKU Generation Mapping
+                        const catPrefixRaw = categoryName.substring(0, 3).toUpperCase();
+                        const prefixMap: Record<string, string> = {
+                            'DRESSES': 'DJV-CAL',
+                            'MEN': 'DJV-JAY',
+                            'MENS': 'DJV-JAY',
+                            'SHOES': 'DJV-SHO',
+                            'BAGS': 'DJV-BAG',
+                            'ACCESSORIES': 'DJV-ACC'
+                        };
+                        const skuPrefix = prefixMap[categoryName.toUpperCase()] || `DJV-${catPrefixRaw}`;
+                        const productSequenceNum = generateSequence();
+                        const generatedBaseSku = `${skuPrefix}-${productSequenceNum}`;
 
                         let imagePath = null;
                         const rawImagePath = findCol(firstRow, 'imagepath', 'image_path', 'image');
@@ -574,9 +611,13 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                         const sellingPrice = parseFloat(findCol(firstRow, 'selling price', 'selling_price', 'price', 'selling') || 0);
                         const reorderLevel = parseInt(findCol(firstRow, 'reorder level', 'reorder_level', 'reorder') || 5);
 
+                        // Use provided SKU or auto-generated one
+                        const providedSku = findCol(firstRow, 'sku', 'product sku');
+                        const finalBaseSku = providedSku ? providedSku.toString().trim() : generatedBaseSku;
+
                         const productInfo = insertProduct.run({
                             name: productName,
-                            sku: findCol(firstRow, 'sku', 'product sku') || null,
+                            sku: finalBaseSku,
                             category: categoryName,
                             category_id: categoryId,
                             cost_price: costPrice,
@@ -584,29 +625,76 @@ export function registerProductHandlers(ipcMain: IpcMain, db: AppDatabase) {
                             stock_quantity: 0,
                             reorder_level: reorderLevel,
                             description: findCol(firstRow, 'description', 'desc', 'product description'),
-                            image_path: imagePath
+                            image_path: imagePath,
+                            trip_name: tripName || null
                         });
 
                         const productId = productInfo.lastInsertRowid;
                         let totalProductStock = 0;
 
                         for (const row of groupRows) {
-                            const sizeRaw = (findCol(row, 'size', 'item size') || 'Default').toString();
-                            const color = (findCol(row, 'color', 'item color') || '').toString();
-                            const totalRowStock = parseInt(findCol(row, 'stock', 'stock quantity', 'quantity') || 0);
-                            const sizes = sizeRaw ? (sizeRaw.includes(',') ? sizeRaw.split(',') : [sizeRaw]) : ['Default'];
+                            // Quantity Extraction, handling formats like '4pcs'
+                            let totalRowStock = 0;
+                            const rawQty = findCol(row, 'stock', 'stock quantity', 'quantity', 'qty');
+                            if (rawQty !== null) {
+                                const qtyStr = rawQty.toString().toLowerCase();
+                                const match = qtyStr.match(/\d+/); // extracts numbers even from '10pcs'
+                                if (match) {
+                                    totalRowStock = parseInt(match[0], 10);
+                                }
+                            }
 
-                            const baseVariantStock = Math.floor(totalRowStock / sizes.length);
-                            const remainder = totalRowStock % sizes.length;
+                            // Range extraction
+                            const sizeRaw = (findCol(row, 'size range', 'sizes', 'size', 'item size') || '').toString().trim();
+                            const color = (findCol(row, 'color', 'item color') || '').toString().trim();
+
+                            let sizes: string[] = [];
+                            if (sizeRaw) {
+                                if (sizeRaw.includes('-')) {
+                                    // Parse Range (e.g., 38-44)
+                                    const parts = sizeRaw.split('-');
+                                    if (parts.length === 2 && !isNaN(parseInt(parts[0])) && !isNaN(parseInt(parts[1]))) {
+                                        const start = parseInt(parts[0]);
+                                        const end = parseInt(parts[1]);
+                                        for (let s = start; s <= end; s += 2) {
+                                            sizes.push(s.toString());
+                                        }
+                                    } else {
+                                        sizes = [sizeRaw]; // Fallback if dash used non-numerically
+                                    }
+                                } else if (sizeRaw.includes(',')) {
+                                    // Parse CSV (e.g., S, M, L)
+                                    sizes = sizeRaw.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+                                } else {
+                                    sizes = [sizeRaw];
+                                }
+                            }
+
+                            // Smart Fallback Generation if no sizes provided
+                            if (sizes.length === 0) {
+                                if (totalRowStock > 0) {
+                                    for (let i = 1; i <= totalRowStock; i++) {
+                                        sizes.push(`Undefined ${i}`);
+                                    }
+                                } else {
+                                    sizes = ['Default'];
+                                }
+                            }
+
+                            // Distribute stock among sizes
+                            const baseVariantStock = Math.floor(Math.max(totalRowStock, 0) / sizes.length);
+                            const remainder = Math.max(totalRowStock, 0) % sizes.length;
 
                             sizes.forEach((size: string, index: number) => {
                                 const cleanSize = size.trim();
                                 if (!cleanSize) return;
+
                                 const variantName = color ? `${cleanSize} - ${color}` : cleanSize;
-                                const variantSku = `${productName.substring(0, 3).toUpperCase()}-${cleanSize.substring(0, 3).toUpperCase()}-${color ? color.substring(0, 3).toUpperCase() : 'DEF'}-${Math.floor(Math.random() * 10000)}`.replace(/\s+/g, '');
+                                const suffix = cleanSize.substring(0, 3).toUpperCase().replace(/\s+/g, '');
+                                const variantSku = `${finalBaseSku}-${suffix}-${index}`; // Added index to ensure uniqueness
 
                                 let variantStock = baseVariantStock;
-                                if (index === 0) variantStock += remainder;
+                                if (index === 0) variantStock += remainder; // Add remainder to first size
 
                                 insertVariant.run({
                                     product_id: productId,

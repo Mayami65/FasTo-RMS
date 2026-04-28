@@ -73,7 +73,8 @@ contextBridge.exposeInMainWorld('api', {
     // Bulk Import
     downloadTemplate: () => ipcRenderer.invoke('download-template'),
     selectExcelFile: () => ipcRenderer.invoke('select-excel-file'),
-    importProducts: (filePath: string) => ipcRenderer.invoke('import-products', filePath),
+    importProducts: (filePath: string, tripName?: string) => ipcRenderer.invoke('import-products', filePath, tripName),
+    getTripNames: () => ipcRenderer.invoke('get-trip-names'),
 
     // Setup Handlers
     checkHasUsers: () => ipcRenderer.invoke('setup:has-users'),
@@ -86,4 +87,19 @@ contextBridge.exposeInMainWorld('api', {
     getLicenseStatus: () => ipcRenderer.invoke('license:get-status'),
     activateLicense: (payload: any) => ipcRenderer.invoke('license:activate', payload),
     deactivateLicense: () => ipcRenderer.invoke('license:deactivate'),
+
+    // Update Handlers
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    installUpdate: () => ipcRenderer.invoke('install-update'),
+    listBackups: () => ipcRenderer.invoke('list-backups'),
+    restoreBackup: (backupPath: string) => ipcRenderer.invoke('restore-backup', backupPath),
+    deleteBackup: (backupPath: string) => ipcRenderer.invoke('delete-backup', backupPath),
+
+    // Update Event Listeners
+    onUpdateAvailable: (callback: any) => ipcRenderer.on('update-available', (_event, data) => callback(data)),
+    onUpdateNotAvailable: (callback: any) => ipcRenderer.on('update-not-available', () => callback()),
+    onUpdateDownloadProgress: (callback: any) => ipcRenderer.on('update-download-progress', (_event, progress) => callback(progress)),
+    onUpdateDownloaded: (callback: any) => ipcRenderer.on('update-downloaded', (_event, data) => callback(data)),
+    onUpdateError: (callback: any) => ipcRenderer.on('update-error', (_event, error) => callback(error)),
 });

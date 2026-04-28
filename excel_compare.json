@@ -1,0 +1,110 @@
+{
+  "oldStock": [
+    [
+      "name",
+      "price",
+      "category",
+      "description",
+      "stock",
+      "is_new",
+      "is_bestseller",
+      "is_featured",
+      "size",
+      "color",
+      "fabric",
+      "variation_stock",
+      "variation_price",
+      "variation_sku",
+      "images"
+    ],
+    [
+      "Sample Product",
+      "19.99",
+      "Sample Category",
+      "Optional description",
+      "10",
+      "yes",
+      "no",
+      "yes",
+      "L",
+      "Red",
+      "Cotton",
+      "5",
+      "21.99",
+      "SKU123",
+      "https://example.com/image1.jpg"
+    ],
+    [
+      "Galvino brown jeans",
+      null,
+      "TROUSERS",
+      null,
+      "1",
+      "1",
+      "no",
+      "yes",
+      "56",
+      "Brown",
+      "Jeans"
+    ],
+    [
+      "Galvino black",
+      null,
+      "TROUSERS",
+      null,
+      "4",
+      "1",
+      "no",
+      "yes",
+      "54,56,48,48`"
+    ],
+    [
+      "Galvino  striped black",
+      null,
+      "TROUSERS",
+      null,
+      "1",
+      null,
+      null,
+      null,
+      "46",
+      "black"
+    ]
+  ],
+  "newStock": [
+    [
+      "Product Name",
+      "SKU",
+      "Category",
+      "Stock Quantity",
+      "Cost Price",
+      "Selling Price",
+      "Reorder Level",
+      "Description"
+    ],
+    [
+      "Fgure wine",
+      "FIG-001",
+      "Dresses",
+      "4pcs"
+    ],
+    [
+      "Fgure red",
+      "FIG-002",
+      "Dresses",
+      "4pcs"
+    ],
+    [
+      "Fgure pink",
+      "FIG-003",
+      "Dresses",
+      "4pcs"
+    ],
+    [
+      "Figure black&white",
+      "FIG-004",
+      "Dresses",
+      "1pc"
+    ]
+  ]
+}

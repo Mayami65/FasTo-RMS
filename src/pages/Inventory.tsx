@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Product } from '@/types/product';
 import { ProductList } from '@/features/inventory/ProductList';
 import { ProductForm } from '@/features/inventory/ProductForm';
 import { StockActionDialog } from '@/features/inventory/StockActionDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, Tag, Upload } from 'lucide-react';
+import { Plus, Tag, Upload, Loader2 } from 'lucide-react';
 import { CategoryManager } from '@/features/inventory/CategoryManager';
 import { InventorySummary } from '@/features/inventory/InventorySummary';
 import { BulkImportDialog } from '@/features/inventory/BulkImportDialog';
+import { cn } from '@/lib/utils';
 
 export default function Inventory() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -21,10 +23,14 @@ export default function Inventory() {
     const [summaryData, setSummaryData] = useState<any>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | 'none' | null>(null);
     const [stockStatus, setStockStatus] = useState<'all' | 'low_stock' | 'out_of_stock' | 'in_stock'>('all');
+    const [tripName, setTripName] = useState<string>('all');
+    const [searchParams] = useSearchParams();
+    const querySearch = searchParams.get('search');
 
     // Pagination state
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [pagination, setPagination] = useState({
         total: 0,
         page: 1,
@@ -32,14 +38,28 @@ export default function Inventory() {
         totalPages: 0
     });
 
+    // Debounce search effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 600); // Increased to 600ms for slower typists
+        return () => clearTimeout(timer);
+    }, [search]);
+
     useEffect(() => {
         loadProducts();
         loadSummary();
-    }, [page, search, selectedCategoryId, stockStatus]);
+    }, [page, debouncedSearch, selectedCategoryId, stockStatus, tripName]);
 
     useEffect(() => {
         if (page !== 1) setPage(1);
-    }, [search, selectedCategoryId, stockStatus]);
+    }, [debouncedSearch, selectedCategoryId, stockStatus, tripName]);
+
+    useEffect(() => {
+        if (querySearch) {
+            setSearch(querySearch);
+        }
+    }, [querySearch]);
 
     const loadSummary = async () => {
         try {
@@ -56,9 +76,10 @@ export default function Inventory() {
             const response = await window.api.getProducts({
                 page,
                 limit: 10,
-                search,
+                search: debouncedSearch,
                 categoryId: selectedCategoryId,
-                stockStatus
+                stockStatus,
+                tripName
             });
             if (response && 'data' in response) {
                 setProducts(response.data);
@@ -165,27 +186,36 @@ export default function Inventory() {
 
             <InventorySummary data={summaryData} />
 
-            <div className="panel bg-white overflow-hidden">
-                {loading ? (
-                    <div className="p-12 flex flex-col items-center justify-center gap-3">
+            <div className="panel bg-white overflow-hidden min-h-[400px] relative">
+                {loading && products.length === 0 ? (
+                    <div className="p-12 flex flex-col items-center justify-center gap-3 min-h-[400px]">
                         <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                         <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Fetching Inventory...</p>
                     </div>
                 ) : (
-                    <ProductList
-                        products={products}
-                        search={search}
-                        onSearchChange={setSearch}
-                        categoryId={selectedCategoryId}
-                        onCategoryChange={setSelectedCategoryId}
-                        stockStatus={stockStatus}
-                        onStockStatusChange={setStockStatus}
-                        pagination={pagination}
-                        onPageChange={setPage}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                        onStockAction={handleStockClick}
-                    />
+                    <div className={cn("transition-opacity duration-200", loading ? "opacity-50" : "opacity-100")}>
+                        <ProductList
+                            products={products}
+                            search={search}
+                            onSearchChange={setSearch}
+                            categoryId={selectedCategoryId}
+                            onCategoryChange={setSelectedCategoryId}
+                            stockStatus={stockStatus}
+                            onStockStatusChange={setStockStatus}
+                            tripName={tripName}
+                            onTripNameChange={setTripName}
+                            pagination={pagination}
+                            onPageChange={setPage}
+                            onEdit={handleEditClick}
+                            onDelete={handleDeleteClick}
+                            onStockAction={handleStockClick}
+                        />
+                        {loading && products.length > 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[1px] z-10">
+                                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, User, ArrowRight, Loader2, CheckCircle2, Sparkles, MapPin, Phone, ShieldCheck, Globe } from 'lucide-react';
+import { Store, User, ArrowRight, Loader2, CheckCircle2, MapPin, Phone, ShieldCheck } from 'lucide-react';
 import logoFull from '@/assets/logo_full.png';
 
 export default function Setup() {
@@ -104,8 +104,12 @@ export default function Setup() {
                             {step === 1 && (
                                 <div className="animate-fade-in-up">
                                     <CardHeader className="text-center pt-10 pb-6">
-                                        <div className="mx-auto bg-indigo-50 p-4 rounded-full w-fit mb-4">
-                                            <Sparkles className="h-10 w-10 text-[#1e1b4b]" />
+                                        <div className="flex justify-center mb-6">
+                                            <img
+                                                src={logoFull}
+                                                alt="FasTo RMS"
+                                                className="h-16 w-auto animate-in fade-in zoom-in-95 duration-700"
+                                            />
                                         </div>
                                         <CardTitle className="text-4xl font-bold tracking-tight text-[#1e1b4b]">Welcome to FasTo RMS</CardTitle>
                                         <CardDescription className="text-lg pt-2 text-slate-500">
@@ -141,6 +145,9 @@ export default function Setup() {
                             {step === 2 && (
                                 <div className="animate-fade-in-up">
                                     <CardHeader className="pt-10 pb-6">
+                                        <div className="flex justify-center mb-4">
+                                            <img src={logoFull} alt="FasTo RMS" className="h-10 w-auto opacity-80" />
+                                        </div>
                                         <CardTitle className="text-2xl font-bold">Shop Profile</CardTitle>
                                         <CardDescription>Tell us about your business</CardDescription>
                                     </CardHeader>
@@ -176,6 +183,9 @@ export default function Setup() {
                             {step === 3 && (
                                 <div className="animate-fade-in-up">
                                     <CardHeader className="pt-10 pb-6">
+                                        <div className="flex justify-center mb-4">
+                                            <img src={logoFull} alt="FasTo RMS" className="h-10 w-auto opacity-80" />
+                                        </div>
                                         <CardTitle className="text-2xl font-bold">Account Setup</CardTitle>
                                         <CardDescription>Create your administrator credentials</CardDescription>
                                     </CardHeader>
@@ -211,8 +221,8 @@ export default function Setup() {
                             {step === 4 && (
                                 <div className="animate-fade-in-up">
                                     <CardHeader className="text-center pt-10 pb-6">
-                                        <div className="mx-auto bg-ghana-gold/10 p-4 rounded-full w-fit mb-4">
-                                            <Globe className="h-10 w-10 text-ghana-gold" />
+                                        <div className="flex justify-center mb-4">
+                                            <img src={logoFull} alt="FasTo RMS" className="h-10 w-auto opacity-80" />
                                         </div>
                                         <CardTitle className="text-2xl font-bold">Review & Finish</CardTitle>
                                         <CardDescription>Ready to launch {formData.shopName}?</CardDescription>
@@ -244,9 +254,14 @@ export default function Setup() {
                             )}
                         </>
                     )}
+                    {/* Brand Footer */}
+                    <div className="py-3 px-6 bg-slate-50/80 border-t border-slate-100 text-center">
+                        <p className="text-[11px] font-medium text-slate-500 uppercase tracking-widest leading-relaxed">
+                            FasTo RMS &bull; Version 1.0.0 &bull; Secure Enterprise Retail Platform
+                        </p>
+                    </div>
                 </Card>
             </div>
         </div>
     );
 }
-

@@ -21,6 +21,7 @@ export function BulkImportDialog({ open, onClose, onSuccess }: BulkImportDialogP
     const [isImporting, setIsImporting] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
+    const [tripName, setTripName] = useState<string>('');
 
 
     const handleDownloadTemplate = async () => {
@@ -47,7 +48,7 @@ export function BulkImportDialog({ open, onClose, onSuccess }: BulkImportDialogP
             if (!filePath) return;
 
             setIsImporting(true);
-            const res = await window.api.importProducts(filePath);
+            const res = await window.api.importProducts(filePath, tripName);
             setIsImporting(false);
 
             if (res.success) {
@@ -67,6 +68,7 @@ export function BulkImportDialog({ open, onClose, onSuccess }: BulkImportDialogP
     const handleClose = () => {
         setResult(null);
         setError(null);
+        setTripName('');
         setIsImporting(false);
         onClose();
     };
@@ -82,6 +84,22 @@ export function BulkImportDialog({ open, onClose, onSuccess }: BulkImportDialogP
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Optional: Trip / Batch Name
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., Dubai Spring 26"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={tripName}
+                            onChange={(e) => setTripName(e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Entering a name will automatically tag all imported products to this trip for easy filtering.
+                        </p>
+                    </div>
+
                     <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50 dark:bg-slate-900">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">

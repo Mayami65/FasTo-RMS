@@ -64,12 +64,12 @@ export function GlobalSearch() {
         performSearch();
     }, [debouncedQuery]);
 
-    const handleSelect = (type: 'product' | 'customer', id?: number) => {
+    const handleSelect = (type: 'product' | 'customer', id?: number, extra?: string) => {
         if (!id) return;
         setIsOpen(false);
         setQuery('');
         if (type === 'product') {
-            navigate('/inventory'); // Or a specific product detail page if it existed
+            navigate(`/inventory?search=${extra || id}`);
         } else {
             navigate(`/customers/${id}`);
         }
@@ -124,7 +124,7 @@ export function GlobalSearch() {
                                         {results.products.map((p) => (
                                             <button
                                                 key={p.id}
-                                                onClick={() => handleSelect('product', p.id)}
+                                                onClick={() => handleSelect('product', p.id, p.sku || p.name)}
                                                 className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors text-left group"
                                             >
                                                 <div className="min-w-0 flex-1">

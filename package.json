@@ -13,7 +13,7 @@
     "electron:build": "tsc -p electron/tsconfig.json && node -e \"require('fs').cpSync('electron/package.json', 'electron/dist/package.json')\"",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "start": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"wait-on tcp:5173 && npm run electron:build && electron .\"",
-    "package": "npm run build && npm run electron:build && cd electron/dist && npm install --omit=dev && cd ../.. && electron-builder --win"
+    "package": "npm run build && npm run electron:build && electron-builder --win"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -35,6 +35,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "electron-is-dev": "^3.0.1",
+    "electron-updater": "^6.8.3",
     "exceljs": "^4.4.0",
     "lucide-react": "^0.563.0",
     "react": "^19.1.0",
@@ -59,7 +60,7 @@
     "bcrypt": "^6.0.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^33.2.0",
+    "electron": "41.3.0",
     "electron-builder": "^26.8.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
