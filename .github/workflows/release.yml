@@ -59,6 +59,8 @@ jobs:
         run: npm run build
 
       - name: Package Electron app
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run package
 
       - name: Create GitHub Release and upload artifacts
