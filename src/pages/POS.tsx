@@ -263,7 +263,7 @@ function POSContent() {
                 onRefundSuccess={loadProducts}
             />
 
-            <ReceiptPrint sale={lastSale} />
+            {!isReceiptPreviewOpen && <ReceiptPrint sale={lastSale} />}
 
             <ReceiptPreviewDialog
                 open={isReceiptPreviewOpen}

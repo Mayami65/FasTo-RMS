@@ -22,7 +22,7 @@ interface RefundDialogProps {
 
 export function RefundDialog({ open, onClose, userId, onRefundSuccess, initialSaleId }: RefundDialogProps) {
     const [saleIdInput, setSaleIdInput] = useState('');
-    const [phoneInput, setPhoneInput] = useState('');
+    const [customerNameInput, setCustomerNameInput] = useState('');
     const [foundSales, setFoundSales] = useState<any[]>([]);
     const [saleData, setSaleData] = useState<any>(null);
     const [reason, setReason] = useState('');
@@ -60,17 +60,17 @@ export function RefundDialog({ open, onClose, userId, onRefundSuccess, initialSa
         }
     };
 
-    const handleSearchByPhone = async () => {
-        if (!phoneInput) return;
+    const handleSearchByCustomerName = async () => {
+        if (!customerNameInput) return;
         setLoadingSale(true);
         try {
-            const results = await window.api.searchSalesByPhone(phoneInput);
+            const results = await window.api.searchSalesByCustomerName(customerNameInput);
             setFoundSales(results || []);
             if (results?.length === 0) {
-                alert('No sales found for this phone number');
+                alert('No sales found for this customer name');
             }
         } catch (error) {
-            console.error('Phone search failed:', error);
+            console.error('Customer name search failed:', error);
         } finally {
             setLoadingSale(false);
         }
@@ -93,7 +93,7 @@ export function RefundDialog({ open, onClose, userId, onRefundSuccess, initialSa
 
     const resetState = () => {
         setSaleIdInput('');
-        setPhoneInput('');
+        setCustomerNameInput('');
         setFoundSales([]);
         setSaleData(null);
         setReason('');
@@ -193,16 +193,16 @@ export function RefundDialog({ open, onClose, userId, onRefundSuccess, initialSa
 
                         <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                             <div className="space-y-2">
-                                <Label className="text-xs uppercase font-black text-slate-400">Search by Customer Phone</Label>
+                                <Label className="text-xs uppercase font-black text-slate-400">Search by Customer Name</Label>
                                 <Input
                                     type="text"
-                                    value={phoneInput}
-                                    onChange={(e) => setPhoneInput(e.target.value)}
-                                    placeholder="024xxxxxxx"
+                                    value={customerNameInput}
+                                    onChange={(e) => setCustomerNameInput(e.target.value)}
+                                    placeholder="e.g. John Doe"
                                     className="font-bold"
                                 />
                             </div>
-                            <Button onClick={handleSearchByPhone} disabled={loadingSale} variant="secondary">
+                            <Button onClick={handleSearchByCustomerName} disabled={loadingSale} variant="secondary">
                                 Search
                             </Button>
                         </div>

@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
     processSale: (saleData: any) => ipcRenderer.invoke('process-sale', saleData),
     getSaleDetails: (saleId: number) => ipcRenderer.invoke('get-sale-details', saleId),
     searchSalesByPhone: (phone: string) => ipcRenderer.invoke('search-sales-by-phone', phone),
+    searchSalesByCustomerName: (name: string) => ipcRenderer.invoke('search-sales-by-customer-name', name),
     getRecentCustomers: (params: any) => ipcRenderer.invoke('get-recent-customers', params),
     getCustomers: (params: any) => ipcRenderer.invoke('get-customers', params),
     addCustomer: (customer: any) => ipcRenderer.invoke('add-customer', customer),

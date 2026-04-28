@@ -401,4 +401,27 @@ export function registerSalesHandlers(ipcMain: IpcMain, db: AppDatabase) {
             return [];
         }
     });
+
+    // Search Sales by Customer Name (partial match)
+    ipcMain.handle('search-sales-by-customer-name', async (_event, name) => {
+        if (!db) return [];
+        try {
+            const q = name ? name.trim() : '';
+            if (!q) return [];
+
+            const like = `%${q}%`;
+            return db.prepare(`
+                SELECT s.*, u.username as cashier_name
+                FROM sales s
+                JOIN customers c ON s.customer_id = c.id
+                LEFT JOIN users u ON s.user_id = u.id
+                WHERE LOWER(c.name) LIKE LOWER(?)
+                ORDER BY s.timestamp DESC
+                LIMIT 10
+            `).all(like);
+        } catch (error) {
+            console.error('Failed to search sales by customer name:', error);
+            return [];
+        }
+    });
 }

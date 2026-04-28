@@ -23,6 +23,7 @@ export interface IElectronAPI {
     processSale: (data: any) => Promise<{ success: boolean; saleId?: number; error?: string }>;
     getSaleDetails: (saleId: number) => Promise<any | null>;
     searchSalesByPhone: (phone: string) => Promise<any[]>;
+    searchSalesByCustomerName: (name: string) => Promise<any[]>;
     holdSale: (data: any) => Promise<{ success: boolean; id?: number; error?: string }>;
     getHeldSales: () => Promise<any[]>;
     deleteHeldSale: (id: number) => Promise<{ success: boolean; error?: string }>;
