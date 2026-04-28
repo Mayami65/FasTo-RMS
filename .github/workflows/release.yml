@@ -70,3 +70,5 @@ jobs:
           tag: ${{ github.ref_name }}
           artifacts: |
             release/FasTo-RMS-Setup-*.exe
+            release/FasTo-RMS-Setup-*.exe.blockmap
+            release/latest.yml

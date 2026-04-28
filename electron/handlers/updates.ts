@@ -74,8 +74,8 @@ export function setupUpdates(mainWindow: BrowserWindow) {
     // Error handler
     autoUpdater.on('error', (error) => {
         if (isMissingGitHubReleaseFeed(error)) {
-            logger.info('No published release feed found yet; skipping update error notification.');
-            mainWindow.webContents.send('update-not-available');
+            logger.error('Update feed is unavailable (GitHub releases feed not found).');
+            mainWindow.webContents.send('update-error', 'Update feed is unavailable. Confirm that GitHub Releases are published and accessible.');
             return;
         }
 
@@ -90,8 +90,8 @@ export function setupUpdates(mainWindow: BrowserWindow) {
             return result;
         } catch (error: any) {
             if (isMissingGitHubReleaseFeed(error)) {
-                logger.info('No published release feed found yet; reporting no update.');
-                return { updateAvailable: false };
+                logger.error('Update feed check failed: GitHub releases feed not found.');
+                throw new Error('Update feed is unavailable. Confirm that GitHub Releases are published and accessible.');
             }
 
             logger.error('Error checking for updates: ' + error.message);
