@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CartProvider, useCart } from "@/context/CartContext";
 import { POSProductGrid } from "@/features/pos/POSProductGrid";
 import { CartPanel } from "@/features/pos/CartPanel";
@@ -18,6 +19,9 @@ import { cn } from "@/lib/utils";
 function POSContent() {
   const { addToCart, cart, totalAmount, clearCart, loadCart } = useCart();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const editSale = (location.state as any)?.editSale;
   const { hasRefunds } = useFeatures();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -34,6 +38,23 @@ function POSContent() {
     loadCategories();
     updateHeldSalesCount();
   }, []);
+
+  useEffect(() => {
+    if (!editSale?.items?.length) return;
+
+    const mappedItems = editSale.items.map((item: any) => ({
+      id: item.product_id,
+      name: item.product_name || item.name || `Item ${item.product_id}`,
+      selling_price: Number(item.price_at_sale || item.price || 0),
+      quantity: Number(item.quantity || 0),
+      variantId: item.variant_id,
+      variationName: item.variation_name,
+    }));
+
+    loadCart(mappedItems as any);
+    setIsReceiptPreviewOpen(false);
+    setIsCheckoutOpen(true);
+  }, [editSale, loadCart]);
 
   const updateHeldSalesCount = async () => {
     try {
@@ -157,7 +178,12 @@ function POSContent() {
       coupon_id: paymentData.coupon_id,
     };
 
-    const result = await window.api.processSale(saleData);
+    const result = editSale
+      ? await window.api.updateSale({
+          saleId: editSale.id,
+          ...saleData,
+        })
+      : await window.api.processSale(saleData);
 
     if (result.success) {
       // Prepare receipt data
@@ -269,6 +295,21 @@ function POSContent() {
         open={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onConfirm={handleConfirmSale}
+        initialValues={
+          editSale
+            ? {
+                paymentMethod: editSale.payment_method,
+                amountTendered: Number(
+                  editSale.amount_tendered || editSale.total_amount || 0,
+                ),
+                customerId: editSale.customer_id,
+                customerName: editSale.customer_name,
+                momoTransactionId: editSale.momo_transaction_id,
+                momoProvider: editSale.momo_provider,
+                couponId: editSale.coupon_id,
+              }
+            : undefined
+        }
       />
 
       <RefundDialog
@@ -282,7 +323,12 @@ function POSContent() {
 
       <ReceiptPreviewDialog
         open={isReceiptPreviewOpen}
-        onClose={() => setIsReceiptPreviewOpen(false)}
+        onClose={() => {
+          setIsReceiptPreviewOpen(false);
+          if (editSale) {
+            navigate("/sales");
+          }
+        }}
         sale={lastSale}
       />
 

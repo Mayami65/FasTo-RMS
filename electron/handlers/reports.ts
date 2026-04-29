@@ -188,7 +188,7 @@ export function registerReportHandlers(ipcMain: IpcMain, db: AppDatabase) {
 
             // 3. Active Agreements
             const activeAgreements = db.prepare(`
-                SELECT COUNT(*) as count FROM hire_purchase_agreements WHERE status = 'ACTIVE'
+                SELECT COUNT(*) as count FROM hire_purchase_agreements WHERE TRIM(UPPER(status)) = 'ACTIVE'
             `).get() as any;
 
             // 4. Low Stock Count

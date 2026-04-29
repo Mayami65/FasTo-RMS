@@ -21,6 +21,7 @@ export interface IElectronAPI {
 
     // Sales
     processSale: (data: any) => Promise<{ success: boolean; saleId?: number; error?: string }>;
+    updateSale: (data: any) => Promise<{ success: boolean; saleId?: number; totalAmount?: number; error?: string }>;
     getSaleDetails: (saleId: number) => Promise<any | null>;
     searchSalesByPhone: (phone: string) => Promise<any[]>;
     searchSalesByCustomerName: (name: string) => Promise<any[]>;

@@ -13,78 +13,11 @@ function isMissingGitHubReleaseFeed(error: unknown): boolean {
 autoUpdater.logger = logger;
 
 export function setupUpdates(mainWindow: BrowserWindow) {
-    if (!app.isPackaged) {
-        return;
-    }
-
-    setTimeout(() => {
-        autoUpdater.checkForUpdates().catch(err => {
-            if (isMissingGitHubReleaseFeed(err)) {
-                logger.info('No published release feed found yet; skipping update check.');
-                return;
-            }
-
-            logger.error('Error checking for updates: ' + err);
-        });
-    }, 5000);
-
-    // Check for updates every hour after app starts
-    setInterval(() => {
-        autoUpdater.checkForUpdates().catch(err => {
-            if (isMissingGitHubReleaseFeed(err)) {
-                logger.info('No published release feed found yet; skipping update check.');
-                return;
-            }
-
-            logger.error('Error checking for updates: ' + err);
-        });
-    }, 60 * 60 * 1000); // 1 hour
-
-    // Send update available event to renderer
-    autoUpdater.on('update-available', (info) => {
-        logger.info('Update available: ' + info.version);
-        mainWindow.webContents.send('update-available', {
-            version: info.version,
-            releaseDate: info.releaseDate,
-            releaseNotes: info.releaseNotes,
-        });
-    });
-
-    // Send update not available
-    autoUpdater.on('update-not-available', () => {
-        logger.info('No updates available');
-        mainWindow.webContents.send('update-not-available');
-    });
-
-    // Send download progress
-    autoUpdater.on('download-progress', (progressObj) => {
-        const progress = Math.round((progressObj.transferred / progressObj.total) * 100);
-        logger.info(`Update download progress: ${progress}%`);
-        mainWindow.webContents.send('update-download-progress', progress);
-    });
-
-    // Update downloaded
-    autoUpdater.on('update-downloaded', (info) => {
-        logger.info('Update downloaded: ' + info.version);
-        mainWindow.webContents.send('update-downloaded', {
-            version: info.version,
-        });
-    });
-
-    // Error handler
-    autoUpdater.on('error', (error) => {
-        if (isMissingGitHubReleaseFeed(error)) {
-            logger.error('Update feed is unavailable (GitHub releases feed not found).');
-            mainWindow.webContents.send('update-error', 'Update feed is unavailable. Confirm that GitHub Releases are published and accessible.');
-            return;
+    const checkForUpdatesSafely = async () => {
+        if (!app.isPackaged) {
+            return { updateInfo: null, skipped: true };
         }
 
-        logger.error('Update error: ' + error.message);
-        mainWindow.webContents.send('update-error', error.message);
-    });
-
-    // IPC handlers for renderer process
-    ipcMain.handle('check-for-updates', async () => {
         try {
             const result = await autoUpdater.checkForUpdates();
             return result;
@@ -97,10 +30,19 @@ export function setupUpdates(mainWindow: BrowserWindow) {
             logger.error('Error checking for updates: ' + error.message);
             throw error;
         }
+    };
+
+    // IPC handlers for renderer process
+    ipcMain.handle('check-for-updates', async () => {
+        return checkForUpdatesSafely();
     });
 
     // Start update download
     ipcMain.handle('download-update', async () => {
+        if (!app.isPackaged) {
+            return { success: false, error: 'Updates are only available in packaged builds.' };
+        }
+
         try {
             await autoUpdater.downloadUpdate();
             return { success: true };
@@ -112,6 +54,10 @@ export function setupUpdates(mainWindow: BrowserWindow) {
 
     // Install and restart (with pre-install backup)
     ipcMain.handle('install-update', async () => {
+        if (!app.isPackaged) {
+            return { success: false, error: 'Updates are only available in packaged builds.' };
+        }
+
         try {
             // Perform a safe backup of user data (database) before installing
             try {
@@ -245,5 +191,76 @@ export function setupUpdates(mainWindow: BrowserWindow) {
             logger.error('Error deleting backup: ' + (err?.message || String(err)));
             throw err;
         }
+    });
+
+    if (!app.isPackaged) {
+        logger.info('Update handlers registered in development mode; auto-check loop disabled.');
+        return;
+    }
+
+    setTimeout(() => {
+        autoUpdater.checkForUpdates().catch(err => {
+            if (isMissingGitHubReleaseFeed(err)) {
+                logger.info('No published release feed found yet; skipping update check.');
+                return;
+            }
+
+            logger.error('Error checking for updates: ' + err);
+        });
+    }, 5000);
+
+    // Check for updates every hour after app starts
+    setInterval(() => {
+        autoUpdater.checkForUpdates().catch(err => {
+            if (isMissingGitHubReleaseFeed(err)) {
+                logger.info('No published release feed found yet; skipping update check.');
+                return;
+            }
+
+            logger.error('Error checking for updates: ' + err);
+        });
+    }, 60 * 60 * 1000); // 1 hour
+
+    // Send update available event to renderer
+    autoUpdater.on('update-available', (info) => {
+        logger.info('Update available: ' + info.version);
+        mainWindow.webContents.send('update-available', {
+            version: info.version,
+            releaseDate: info.releaseDate,
+            releaseNotes: info.releaseNotes,
+        });
+    });
+
+    // Send update not available
+    autoUpdater.on('update-not-available', () => {
+        logger.info('No updates available');
+        mainWindow.webContents.send('update-not-available');
+    });
+
+    // Send download progress
+    autoUpdater.on('download-progress', (progressObj) => {
+        const progress = Math.round((progressObj.transferred / progressObj.total) * 100);
+        logger.info(`Update download progress: ${progress}%`);
+        mainWindow.webContents.send('update-download-progress', progress);
+    });
+
+    // Update downloaded
+    autoUpdater.on('update-downloaded', (info) => {
+        logger.info('Update downloaded: ' + info.version);
+        mainWindow.webContents.send('update-downloaded', {
+            version: info.version,
+        });
+    });
+
+    // Error handler
+    autoUpdater.on('error', (error) => {
+        if (isMissingGitHubReleaseFeed(error)) {
+            logger.error('Update feed is unavailable (GitHub releases feed not found).');
+            mainWindow.webContents.send('update-error', 'Update feed is unavailable. Confirm that GitHub Releases are published and accessible.');
+            return;
+        }
+
+        logger.error('Update error: ' + error.message);
+        mainWindow.webContents.send('update-error', error.message);
     });
 }

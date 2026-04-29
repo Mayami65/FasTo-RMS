@@ -14,13 +14,21 @@ export function registerHirePurchaseHandlers(ipcMain: IpcMain, db: AppDatabase) 
         }
 
         try {
-            const activeAgreements = db.prepare('SELECT COUNT(*) as count FROM hire_purchase_agreements WHERE status = ?').get('ACTIVE') as any;
-            const totalDebt = db.prepare('SELECT SUM(balance_due) as total FROM hire_purchase_agreements WHERE status = ?').get('ACTIVE') as any;
+                const activeAgreements = db.prepare(`
+                    SELECT COUNT(*) as count
+                    FROM hire_purchase_agreements
+                    WHERE TRIM(UPPER(status)) = 'ACTIVE'
+                `).get() as any;
+                const totalDebt = db.prepare(`
+                    SELECT COALESCE(SUM(balance_due), 0) as total
+                    FROM hire_purchase_agreements
+                    WHERE TRIM(UPPER(status)) = 'ACTIVE'
+                `).get() as any;
 
             const overdueAgreements = db.prepare(`
                 SELECT COUNT(*) as count 
                 FROM hire_purchase_agreements 
-                WHERE status = 'ACTIVE' 
+                WHERE TRIM(UPPER(status)) = 'ACTIVE' 
                 AND next_payment_date < datetime('now')
             `).get() as any;
 
@@ -67,7 +75,7 @@ export function registerHirePurchaseHandlers(ipcMain: IpcMain, db: AppDatabase) 
             let whereClause = '';
 
             if (status && status !== 'ALL') {
-                whereClause += ' AND hpa.status = ?';
+                whereClause += ' AND TRIM(UPPER(hpa.status)) = TRIM(UPPER(?))';
                 params.push(status);
             }
 
@@ -101,7 +109,7 @@ export function registerHirePurchaseHandlers(ipcMain: IpcMain, db: AppDatabase) 
                 SELECT hpa.*, c.name as customer_name, c.phone as customer_phone
                 FROM hire_purchase_agreements hpa
                 JOIN customers c ON hpa.customer_id = c.id
-                WHERE hpa.status = 'ACTIVE' 
+                WHERE TRIM(UPPER(hpa.status)) = 'ACTIVE' 
                 AND hpa.next_payment_date < datetime('now')
                 ORDER BY hpa.next_payment_date ASC
             `).all();
