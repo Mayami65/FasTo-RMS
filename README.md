@@ -4,6 +4,8 @@
 
 An offline-first desktop application for managing retail operations, built with Electron, React, and SQLite.
 
+GitHub Pages hosts the public project showcase. The operational app runs as a desktop Electron build.
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (LTS)
@@ -20,6 +22,11 @@ An offline-first desktop application for managing retail operations, built with 
    npm start
    ```
    This will launch the Electron window with Vite hot-reloading.
+
+## Web Showcase
+
+The project site is deployed to GitHub Pages from the `master` branch. It shows a browser-safe landing page,
+while the full retail workflow continues to run in the desktop app.
 
 ## Tech Stack
 

@@ -21,8 +21,15 @@ import Marketing from "./pages/Marketing";
 import Setup from "./pages/Setup";
 import AuditLogs from "./pages/AuditLogs";
 import Refunds from "./pages/Refunds";
+import WebLanding from "./pages/WebLanding";
 
 function App() {
+  const isElectronApp = typeof window !== "undefined" && "api" in window;
+
+  if (!isElectronApp) {
+    return <WebLanding />;
+  }
+
   return (
     <ErrorBoundary>
       <Router>
