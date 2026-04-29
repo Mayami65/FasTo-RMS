@@ -10,6 +10,7 @@ import {
   Sparkles,
   TimerReset,
   Warehouse,
+  MessageSquare,
 } from "lucide-react";
 
 const highlights = [
@@ -96,37 +97,41 @@ export default function WebLanding() {
               </div>
 
               <div className="space-y-5">
-                <h2 className="max-w-3xl font-serif text-5xl leading-none tracking-tight text-white md:text-7xl">
-                  A desktop retail system with the discipline of a register and
-                  the clarity of a dashboard.
+                <h2 className="max-w-3xl font-serif text-5xl leading-none tracking-tight text-white md:text-7xl animate-fade-in-up">
+                  Sell faster. Run offline. Stay in control.
                 </h2>
-                <p className="max-w-2xl text-base leading-7 text-white/72 md:text-lg">
-                  FasTo RMS is a local-first business application for point of
-                  sale, inventory, customer management, hire purchase, refunds,
-                  and reporting. GitHub Pages hosts the product story; the
-                  Electron app handles the actual operations.
+                <p className="max-w-2xl text-base leading-7 text-white/72 md:text-lg mt-4 animate-fade-in-up" style={{animationDelay: '120ms'}}>
+                  FasTo RMS puts a full-featured point-of-sale, inventory
+                  management, and hire-purchase workflow on your local machine
+                  — fast, reliable, and offline-first. No cloud, no latency,
+                  just the tools your store needs to operate every day.
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 items-center">
                 <a
                   href="https://github.com/Mayami65/FasTo-RMS/releases"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f5b94a] px-6 py-3 text-sm font-black text-[#131313] transition-transform duration-200 hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-3 rounded-full bg-[#f5b94a] px-6 py-4 text-base font-black text-[#131313] shadow-xl transition-transform duration-200 hover:-translate-y-0.5"
                 >
-                  <Download className="h-4 w-4" />
-                  Download release
+                  <Download className="h-5 w-5" />
+                  Get the desktop app
                 </a>
                 <a
                   href="https://github.com/Mayami65/FasTo-RMS"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-black text-white transition-colors hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-black text-white transition-colors hover:bg-white/10"
                 >
                   View source
                   <ArrowRight className="h-4 w-4" />
                 </a>
+
+                <div className="ml-4 flex items-center gap-3 text-sm text-white/60">
+                  <ShieldCheck className="h-4 w-4 text-[#f5b94a]" />
+                  <span className="font-semibold">Secure updates</span>
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -201,6 +206,57 @@ export default function WebLanding() {
                     SQLite and local device APIs.
                   </p>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <div className="mx-auto max-w-4xl space-y-6 text-center">
+              <p className="text-sm uppercase tracking-[0.35em] text-[#f5b94a] font-black">Trusted for daily retail</p>
+              <h3 className="font-serif text-2xl text-white">Used in busy shops and markets</h3>
+              <p className="text-white/70 max-w-2xl mx-auto">FasTo RMS focuses on reliability and speed: local data, fast searches, thermal-ready receipts, and a workflow your team will actually use.</p>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl bg-white/5 p-4">
+                  <p className="font-bold text-white">Offline-first</p>
+                  <p className="mt-1 text-sm text-white/70">Work uninterrupted without internet.</p>
+                </div>
+                <div className="rounded-2xl bg-white/5 p-4">
+                  <p className="font-bold text-white">Fast POS</p>
+                  <p className="mt-1 text-sm text-white/70">Quick checkout, receipt printing, held sales.</p>
+                </div>
+                <div className="rounded-2xl bg-white/5 p-4">
+                  <p className="font-bold text-white">Hire purchase</p>
+                  <p className="mt-1 text-sm text-white/70">Built-in hire-purchase agreements and installments.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-12">
+            <div className="mx-auto max-w-5xl">
+              <p className="text-sm font-black uppercase tracking-[0.35em] text-[#f5b94a]">What shop owners say</p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    quote: "We replaced a slow cloud till with FasTo and transactions are instant — even when the connection drops.",
+                    author: "Local grocer, Accra",
+                  },
+                  {
+                    quote: "Inventory is finally reliable. Stock counts used to take hours, now it's minutes.",
+                    author: "Market vendor, Kumasi",
+                  },
+                  {
+                    quote: "Hire-purchase handling is straightforward and customers love the receipts.",
+                    author: "Appliance shop, Takoradi",
+                  },
+                ].map((t, i) => (
+                  <div key={i} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <MessageSquare className="h-5 w-5 text-[#f5b94a]" />
+                    <p className="mt-3 text-sm text-white/75">“{t.quote}”</p>
+                    <p className="mt-3 text-xs font-bold text-white/60">— {t.author}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
