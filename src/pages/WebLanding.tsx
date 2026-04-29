@@ -100,11 +100,14 @@ export default function WebLanding() {
                 <h2 className="max-w-3xl font-serif text-5xl leading-none tracking-tight text-white md:text-7xl animate-fade-in-up">
                   Sell faster. Run offline. Stay in control.
                 </h2>
-                <p className="max-w-2xl text-base leading-7 text-white/72 md:text-lg mt-4 animate-fade-in-up" style={{animationDelay: '120ms'}}>
+                <p
+                  className="max-w-2xl text-base leading-7 text-white/72 md:text-lg mt-4 animate-fade-in-up"
+                  style={{ animationDelay: "120ms" }}
+                >
                   FasTo RMS puts a full-featured point-of-sale, inventory
-                  management, and hire-purchase workflow on your local machine
-                  — fast, reliable, and offline-first. No cloud, no latency,
-                  just the tools your store needs to operate every day.
+                  management, and hire-purchase workflow on your local machine —
+                  fast, reliable, and offline-first. No cloud, no latency, just
+                  the tools your store needs to operate every day.
                 </p>
               </div>
 
@@ -212,22 +215,36 @@ export default function WebLanding() {
 
           <section className="mt-8">
             <div className="mx-auto max-w-4xl space-y-6 text-center">
-              <p className="text-sm uppercase tracking-[0.35em] text-[#f5b94a] font-black">Trusted for daily retail</p>
-              <h3 className="font-serif text-2xl text-white">Used in busy shops and markets</h3>
-              <p className="text-white/70 max-w-2xl mx-auto">FasTo RMS focuses on reliability and speed: local data, fast searches, thermal-ready receipts, and a workflow your team will actually use.</p>
+              <p className="text-sm uppercase tracking-[0.35em] text-[#f5b94a] font-black">
+                Trusted for daily retail
+              </p>
+              <h3 className="font-serif text-2xl text-white">
+                Used in busy shops and markets
+              </h3>
+              <p className="text-white/70 max-w-2xl mx-auto">
+                FasTo RMS focuses on reliability and speed: local data, fast
+                searches, thermal-ready receipts, and a workflow your team will
+                actually use.
+              </p>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl bg-white/5 p-4">
                   <p className="font-bold text-white">Offline-first</p>
-                  <p className="mt-1 text-sm text-white/70">Work uninterrupted without internet.</p>
+                  <p className="mt-1 text-sm text-white/70">
+                    Work uninterrupted without internet.
+                  </p>
                 </div>
                 <div className="rounded-2xl bg-white/5 p-4">
                   <p className="font-bold text-white">Fast POS</p>
-                  <p className="mt-1 text-sm text-white/70">Quick checkout, receipt printing, held sales.</p>
+                  <p className="mt-1 text-sm text-white/70">
+                    Quick checkout, receipt printing, held sales.
+                  </p>
                 </div>
                 <div className="rounded-2xl bg-white/5 p-4">
                   <p className="font-bold text-white">Hire purchase</p>
-                  <p className="mt-1 text-sm text-white/70">Built-in hire-purchase agreements and installments.</p>
+                  <p className="mt-1 text-sm text-white/70">
+                    Built-in hire-purchase agreements and installments.
+                  </p>
                 </div>
               </div>
             </div>
@@ -235,26 +252,36 @@ export default function WebLanding() {
 
           <section className="mt-12">
             <div className="mx-auto max-w-5xl">
-              <p className="text-sm font-black uppercase tracking-[0.35em] text-[#f5b94a]">What shop owners say</p>
+              <p className="text-sm font-black uppercase tracking-[0.35em] text-[#f5b94a]">
+                What shop owners say
+              </p>
               <div className="mt-6 grid gap-4 md:grid-cols-3">
                 {[
                   {
-                    quote: "We replaced a slow cloud till with FasTo and transactions are instant — even when the connection drops.",
+                    quote:
+                      "We replaced a slow cloud till with FasTo and transactions are instant — even when the connection drops.",
                     author: "Local grocer, Accra",
                   },
                   {
-                    quote: "Inventory is finally reliable. Stock counts used to take hours, now it's minutes.",
+                    quote:
+                      "Inventory is finally reliable. Stock counts used to take hours, now it's minutes.",
                     author: "Market vendor, Kumasi",
                   },
                   {
-                    quote: "Hire-purchase handling is straightforward and customers love the receipts.",
+                    quote:
+                      "Hire-purchase handling is straightforward and customers love the receipts.",
                     author: "Appliance shop, Takoradi",
                   },
                 ].map((t, i) => (
-                  <div key={i} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+                  >
                     <MessageSquare className="h-5 w-5 text-[#f5b94a]" />
                     <p className="mt-3 text-sm text-white/75">“{t.quote}”</p>
-                    <p className="mt-3 text-xs font-bold text-white/60">— {t.author}</p>
+                    <p className="mt-3 text-xs font-bold text-white/60">
+                      — {t.author}
+                    </p>
                   </div>
                 ))}
               </div>
