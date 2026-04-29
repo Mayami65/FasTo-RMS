@@ -55,11 +55,11 @@ export default function WebLanding() {
 
   return (
     <div className="min-h-screen bg-[#0b0d10] text-[#f5f0e8] selection:bg-[#f5b94a] selection:text-[#111]">
-      <div className="relative overflow-hidden">
+      <div className="relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(245,185,74,0.18),_transparent_32%),radial-gradient(circle_at_80%_20%,_rgba(255,255,255,0.08),_transparent_24%),linear-gradient(135deg,_rgba(255,255,255,0.03),_transparent_45%)]" />
         <div className="absolute inset-0 opacity-[0.15] [background-image:linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:72px_72px]" />
 
-        <main className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:px-10">
+        <main className="relative mx-auto block max-w-7xl px-6 py-8 lg:px-10">
           <header className="flex flex-col gap-6 border-b border-white/10 pb-8 md:flex-row md:items-end md:justify-between">
             <div className="flex items-center gap-4">
               <div className="rounded-3xl border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/30 backdrop-blur">
@@ -88,7 +88,7 @@ export default function WebLanding() {
             </div>
           </header>
 
-          <section className="grid flex-1 gap-8 py-12 lg:grid-cols-[1.3fr_0.7fr] lg:items-center lg:py-16">
+          <section className="grid gap-8 py-12 lg:grid-cols-[1.3fr_0.7fr] lg:items-center lg:py-16">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#f5b94a]/20 bg-[#f5b94a]/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.35em] text-[#f5d38b]">
                 <Sparkles className="h-3.5 w-3.5" />
